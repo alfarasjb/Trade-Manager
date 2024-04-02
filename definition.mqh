@@ -7,6 +7,10 @@
 
 #include "logging.mqh"
 #include "trade_ops.mqh"
+
+
+
+
 #undef      CONTROLS_FONT_SIZE
 #define     MAIN_PANEL_X1  10 
 #define     MAIN_PANEL_Y1  20
@@ -27,10 +31,19 @@
 #define MAIN_BT_PRICE_FONTSIZE      10
 
 #define PRICE_FIELD_INDENT_TOP      10 
-#define PRICE_FIELD_INDENT_LEFT     50  
+#define PRICE_FIELD_INDENT_LEFT     30  
 #define PRICE_FIELD_HEIGHT          20
-#define PRICE_FIELD_WIDTH           150
+#define PRICE_FIELD_WIDTH           130
 #define ADJ_BUTTON_SIZE             20
+
+#define CHECKBOX_X_GAP              5
+#define CHECKBOX_Y_GAP              2 
+#define CHECKBOX_WIDTH              50 
+#define CHECKBOX_HEIGHT             15
+
+#define WIDE_BUTTON_WIDTH     210 
+#define WIDE_BUTTON_HEIGHT    30 
+
 
 #define BUY_BUTTON_COLOR            clrDodgerBlue 
 #define SELL_BUTTON_COLOR           clrCrimson

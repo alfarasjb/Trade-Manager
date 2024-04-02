@@ -4,7 +4,7 @@
 class CTradeMgr : public CTradeOps {
 private:
    double         lots_;
-   int            sl_points_, tp_points_, step_; 
+   int            sl_points_, tp_points_, be_points_, step_, min_points_; 
 public:
    CTradeMgr();
    ~CTradeMgr() {};
@@ -18,11 +18,23 @@ public:
    int      TPPoints() const     { return tp_points_; }
    void     TPPoints(int value)  { tp_points_ = value; }
    
+   int      BEPoints() const     { return be_points_; }
+   void     BEPoints(int value)  { be_points_ = value; }
+   
+   int      MinPoints() const    { return min_points_; }
+   void     MinPoints(int value) { min_points_ = value; }
+      
    int      Step() const         { return step_; }
    void     Step(int value)      { step_ = value; }
    
+   
+   int      Increment(int value) { return value += Step(); }
+   int      Decrement(int value) { return value -= Step(); }
+   
    void     OrderSendMarketBuy();
    void     OrderSendMarketSell();
+   
+   
 }; 
 
 
@@ -31,6 +43,8 @@ CTradeMgr::CTradeMgr()
    , lots_(UTIL_SYMBOL_MINLOT())
    , sl_points_(100)
    , tp_points_(100)
+   , be_points_(50)
+   , min_points_(50)
    , step_(10) {}
 
 

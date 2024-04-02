@@ -26,6 +26,9 @@ int OnInit()
 void OnDeinit(const int reason)
   {
 //---
+   Print("DEINIT"); 
+   ObjectsDeleteAll(0, -1, -1); 
+   app.Destroy(reason); 
   }
 //+------------------------------------------------------------------+
 //| Expert tick function                                             |
