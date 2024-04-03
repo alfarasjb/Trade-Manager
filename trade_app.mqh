@@ -481,7 +481,7 @@ bool        CTradeApp::CreateBEAllButton() {
 bool        CTradeApp::CreateCloseAllButton() {
    int x1   = dec_bt_x1_;
    int x2   = x1 + Scale(WIDE_BUTTON_WIDTH);
-   int y1   = be_all_bt_.Top();
+   int y1   = be_all_bt_.Bottom() - Scale(WIDE_BUTTON_HEIGHT);
    int y2   = y1 + Scale(WIDE_BUTTON_HEIGHT); 
    if (!CreateWideButton(close_all_bt_, "CloseAll", x1, y1, x2, y2, "Close All Positions")) return false; 
    return true; 
@@ -490,7 +490,7 @@ bool        CTradeApp::CreateCloseAllButton() {
 bool        CTradeApp::CreateNewsButton() {
    int x1   = dec_bt_x1_; 
    int x2   = x1 + Scale(WIDE_BUTTON_WIDTH); 
-   int y1   = close_all_bt_.Top(); 
+   int y1   = close_all_bt_.Bottom() - Scale(WIDE_BUTTON_HEIGHT); 
    int y2   = y1 + Scale(WIDE_BUTTON_HEIGHT); 
    
    if (!CreateWideButton(news_bt_, "News", x1, y1, x2, y2, "News")) return false; 
