@@ -146,7 +146,7 @@ CTradeApp::CTradeApp(CTradeMgr *trade) : TradeMain(trade) {
 }
 
 CTradeApp::~CTradeApp() {
-   Print("DESTRUCTOR"); 
+
    delete Log_;
 }
 
@@ -441,9 +441,9 @@ void        CTradeApp::OnClickMarketBuy() {
       return; 
    }
    market_buy_bt_.Pressed(true); 
-   Log_.LogInformation("OnClickMarketBuy Pressed.", __FUNCTION__);
+   
    TradeMain.OrderSendMarketBuy();
-   Sleep(100);
+   
    market_buy_bt_.Pressed(false); 
    
 }
@@ -454,9 +454,9 @@ void        CTradeApp::OnClickMarketSell() {
       return; 
    }
    market_sell_bt_.Pressed(true); 
-   Log_.LogInformation("OnClickMarketSell Pressed.", __FUNCTION__);
+   
    TradeMain.OrderSendMarketSell(); 
-   Sleep(100);
+   
    market_sell_bt_.Pressed(false);
 }
 
@@ -466,17 +466,18 @@ void        CTradeApp::OnClickMarketSell() {
 //+------------------------------------------------------------------+
 
 void        CTradeApp::OnClickIncrementLots() {
-   Log_.LogInformation("Pressed", __FUNCTION__); 
-   double current_lot   = TradeMain.Lots(); 
-   TradeMain.Lots(current_lot+=UTIL_SYMBOL_LOTSTEP()); 
+   double target_value  = TradeMain.Lots() + UTIL_SYMBOL_LOTSTEP(); 
+   if (target_value > UTIL_SYMBOL_MAXLOT()) return; 
+   TradeMain.Lots(target_value); 
    lots_field_.Text((string)TradeMain.Lots());
    UpdateRiskReward();
 }
 
 void        CTradeApp::OnClickDecrementLots() {
    Log_.LogInformation("Pressed", __FUNCTION__); 
-   double current_lot   = TradeMain.Lots(); 
-   TradeMain.Lots(current_lot-=UTIL_SYMBOL_LOTSTEP()); 
+   double target_value  = TradeMain.Lots() - UTIL_SYMBOL_LOTSTEP(); 
+   if (target_value < UTIL_SYMBOL_MINLOT()) return; 
+   TradeMain.Lots(target_value); 
    lots_field_.Text((string)TradeMain.Lots());
    UpdateRiskReward();
 }

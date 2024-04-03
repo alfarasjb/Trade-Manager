@@ -140,5 +140,22 @@ int         CTradeMgr::CloseAllPositions() {
    }
    Log_.LogInformation(StringFormat("%i trades found. Attempting to close.", 
       PosTotal()), __FUNCTION__); 
-   return OP_OrdersCloseAll(); 
+      
+   CPoolGeneric<int> *tickets = new CPoolGeneric<int>(); 
+   
+   for (int i = 0; i < PosTotal(); i++) {
+      int s = OP_OrderSelectByIndex(i);
+      int ticket = PosTicket();
+      tickets.Append(ticket); 
+   }
+   
+   int extracted[];
+   int num_extracted = tickets.Extract(extracted); 
+   
+   OP_OrdersCloseBatch(extracted); 
+   
+   if (PosTotal() != 0) Log_.LogInformation(StringFormat("Not all orders were closed. Num Extracted: %i, Remaining: %i", 
+      num_extracted, 
+      PosTotal()), __FUNCTION__); 
+   return num_extracted; 
 }

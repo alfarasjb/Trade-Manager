@@ -15,8 +15,7 @@ CTradeApp      app(GetPointer(trade_main));
 int OnInit()
   {
 //---
-   string input_string  = "123dfsa3"; 
-   PrintFormat("Input: %s Valid: %s", input_string, (string)ValidInputs(input_string));
+   trade_main.CalculateRiskParameters(); 
    app.Init(); 
    
 //---
@@ -28,7 +27,6 @@ int OnInit()
 void OnDeinit(const int reason)
   {
 //---
-   Print("DEINIT"); 
    ObjectsDeleteAll(0, -1, -1); 
    app.Destroy(reason); 
   }
