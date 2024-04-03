@@ -199,10 +199,23 @@ int      CTradeOps::OP_OrderOpen(
             result = Trade.PositionOpen(symbol, order_type, NormalizeDouble(volume, 2), price, sl, tp, comment); 
             break; 
       }
-      ulong ret_code = Trade.ResultRetcode(); 
-      if (ret_code != TRADE_RETCODE_DONE) Log_.LogError(StringFormat("Position open error. Code: %i", ret_code), __FUNCTION__); 
       
+      ulong ret_code = Trade.ResultRetcode(); 
       ulong ticket = Trade.ResultDeal(); 
+      switch(ret_code == TRADE_RETCODE_DONE) {
+         case true:
+            Log_.LogInformation(StringFormat("Order Send Successful. Ticket: %i, Price: %f, Volume: %.2f, SL: %f, TP: %f",
+               ticket, 
+               UTIL_TO_PRICE(Trade.RequestPrice()),
+               Trade.RequestVolume(),
+               UTIL_TO_PRICE(Trade.RequestSL()), 
+               UTIL_TO_PRICE(Trade.RequestTP())), __FUNCTION__); 
+            break;
+         case false: 
+            Log_.LogError(StringFormat("Position open error. Code: %i", ret_code), __FUNCTION__); 
+            break;
+      }
+      
       #endif 
       return ticket; 
 }

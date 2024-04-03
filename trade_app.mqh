@@ -84,7 +84,11 @@ public:
    //--- EVENT MAPPING 
    EVENT_MAP_BEGIN(CTradeApp) 
    ON_EVENT(ON_CLICK, market_buy_bt_, OnClickMarketBuy);
-   ON_EVENT(ON_CLICK, market_sell_bt_, OnClickMarketSell); 
+   ON_EVENT(ON_CLICK, buy_label_, OnClickMarketBuy);
+   ON_EVENT(ON_CLICK, ask_label_, OnClickMarketBuy);
+   ON_EVENT(ON_CLICK, market_sell_bt_, OnClickMarketSell);
+   ON_EVENT(ON_CLICK, sell_label_, OnClickMarketSell);
+   ON_EVENT(ON_CLICK, bid_label_, OnClickMarketSell);  
    ON_EVENT(ON_CLICK, increment_lot_bt_, OnClickIncrementLots);
    ON_EVENT(ON_CLICK, decrement_lot_bt_, OnClickDecrementLots); 
    ON_EVENT(ON_END_EDIT, lots_field_, OnEndEditLotsField);
@@ -109,9 +113,17 @@ public:
             int      Scale(double value)  { return (int)MathRound(value * dpi_scale_); }
             string   DollarValue(double value)  { return StringFormat("$%.2f", value); }
             void     UpdateValuesOnTick(); 
+            void     UpdateRiskReward(); 
             
             string   BuyButtonString() const;
-            string   SellButtonString() const; 
+            string   SellButtonString() const;
+           
+            bool     ValidPoints(int value);
+            bool     ValidLots(double value); 
+            bool     ValidFieldInput(string input_string); 
+            bool     ValidPointsField(CEdit &field); 
+            void     ValidationError(ENUM_VALIDATION_ERROR error, string target_value, string func); 
+            bool     TradingAllowed(); 
 }; 
 
 CTradeApp::CTradeApp(CTradeMgr *trade) : TradeMain(trade) {
@@ -123,13 +135,14 @@ CTradeApp::CTradeApp(CTradeMgr *trade) : TradeMain(trade) {
    col_1_   = Scale(COLUMN_1);
    col_2_   = Scale(COLUMN_2); 
    
-   inc_bt_x1_  = PRICE_FIELD_INDENT_LEFT + Scale(PRICE_FIELD_WIDTH-1); 
+   inc_bt_x1_  = PRICE_FIELD_INDENT_LEFT + Scale(PRICE_FIELD_WIDTH); 
    inc_bt_x2_  = inc_bt_x1_ + Scale(ADJ_BUTTON_SIZE); 
    
     
    dec_bt_x1_  = col_1_; //Scale(ADJ_BUTTON_SIZE-2);
    dec_bt_x2_  = dec_bt_x1_ + Scale(ADJ_BUTTON_SIZE); 
    Log_  = new CLogging(true, false, false);
+   
 }
 
 CTradeApp::~CTradeApp() {
@@ -243,7 +256,7 @@ bool        CTradeApp::CreateSLRow() {
    
    int   risk_y   = adj_button_y2 + Scale(2); 
    if (!CreateLabel(risk_label_, "Risk", dec_bt_x1_, risk_y, inc_bt_x2_, risk_y, "Risk", Scale(7))) return false; 
-   if (!CreateLabel(risk_value_label_, "Risk Value", dec_bt_x1_ + Scale(50), risk_y, inc_bt_x2_, risk_y, DollarValue(100.00), Scale(7))) return false; 
+   if (!CreateLabel(risk_value_label_, "Risk Value", dec_bt_x1_ + Scale(50), risk_y, inc_bt_x2_, risk_y, DollarValue(TradeMain.RiskUSD()), Scale(7))) return false; 
    
    return true; 
 }
@@ -301,7 +314,7 @@ bool        CTradeApp::CreateTPRow() {
    int   reward_y   = adj_button_y2 + Scale(2); 
    
    if (!CreateLabel(reward_label_, "Reward", dec_bt_x1_, reward_y, inc_bt_x2_, reward_y, "Reward", Scale(7))) return false; 
-   if (!CreateLabel(reward_value_label_, "Reward Value", dec_bt_x1_ + Scale(50), reward_y, inc_bt_x2_, reward_y, DollarValue(100.00), Scale(7))) return false; 
+   if (!CreateLabel(reward_value_label_, "Reward Value", dec_bt_x1_ + Scale(50), reward_y, inc_bt_x2_, reward_y, DollarValue(TradeMain.RewardUSD()), Scale(7))) return false; 
    
    return true; 
 }
@@ -319,7 +332,7 @@ bool        CTradeApp::CreateBERow() {
    if (!CreateAdjustButton(increment_be_bt_, "AddBE", inc_bt_x1_, y1, inc_bt_x2_, adj_button_y2, "+")) return false; 
    if (!CreateAdjustButton(decrement_be_bt_, "SubBE", dec_bt_x1_, y1, dec_bt_x2_, adj_button_y2, "-")) return false; 
    if (!CreateCheckbox(be_checkbox_, "BECheckbox", checkbox_x1, checkbox_y1, checkbox_x2, checkbox_y2, "BE")) return false; 
-   
+
    return true;
 }
 
@@ -353,7 +366,6 @@ bool        CTradeApp::CreateMarketOrderButton(
    int label_y2         = label_y1 + Scale(label_height); 
    
    string price_string  = UTIL_PRICE_STIRNG(price);
-   
    if (!bt.Create(0, name, 0, x1, y1, x2, y2)) return false; 
    if (!bt.ColorBackground(button_color)) return false;
    if (!Add(bt)) return false; 
@@ -369,6 +381,9 @@ bool        CTradeApp::CreateMarketOrderButton(
    if (!order_label.FontSize(MAIN_BT_ORDER_FONTSIZE)) return false;
    if (!order_label.Color(ORDER_BUTTON_FONT_COLOR)) return false; 
    if (!Add(order_label)) return false; 
+   
+   
+   
    
    return true; 
    
@@ -421,96 +436,269 @@ bool        CTradeApp::CreateNewsButton() {
 }
 
 void        CTradeApp::OnClickMarketBuy() {
+   if (!TradingAllowed()) {
+      market_buy_bt_.Pressed(false);
+      return; 
+   }
+   market_buy_bt_.Pressed(true); 
    Log_.LogInformation("OnClickMarketBuy Pressed.", __FUNCTION__);
    TradeMain.OrderSendMarketBuy();
+   Sleep(100);
+   market_buy_bt_.Pressed(false); 
+   
 }
 
 void        CTradeApp::OnClickMarketSell() {
+   if (!TradingAllowed()) {
+      market_sell_bt_.Pressed(false);
+      return; 
+   }
+   market_sell_bt_.Pressed(true); 
    Log_.LogInformation("OnClickMarketSell Pressed.", __FUNCTION__);
    TradeMain.OrderSendMarketSell(); 
+   Sleep(100);
+   market_sell_bt_.Pressed(false);
 }
+
+
+//+------------------------------------------------------------------+
+//| ADJUSTMENTS                                                      |
+//+------------------------------------------------------------------+
 
 void        CTradeApp::OnClickIncrementLots() {
    Log_.LogInformation("Pressed", __FUNCTION__); 
    double current_lot   = TradeMain.Lots(); 
    TradeMain.Lots(current_lot+=UTIL_SYMBOL_LOTSTEP()); 
    lots_field_.Text((string)TradeMain.Lots());
+   UpdateRiskReward();
 }
 
 void        CTradeApp::OnClickDecrementLots() {
    Log_.LogInformation("Pressed", __FUNCTION__); 
    double current_lot   = TradeMain.Lots(); 
    TradeMain.Lots(current_lot-=UTIL_SYMBOL_LOTSTEP()); 
-   lots_field_.Text((string)TradeMain.Lots()); 
+   lots_field_.Text((string)TradeMain.Lots());
+   UpdateRiskReward();
 }
 
 void        CTradeApp::OnClickIncrementSLPoints() {
-   TradeMain.SLPoints(TradeMain.Increment(TradeMain.SLPoints())); 
+   int      target_value   = TradeMain.Increment(TradeMain.SLPoints()); 
+   if (!ValidFieldInput(IntegerToString(target_value))) return; 
+   TradeMain.SLPoints(target_value); 
    sl_field_.Text((string)TradeMain.SLPoints()); 
+   UpdateRiskReward();
 } 
 
 void        CTradeApp::OnClickDecrementSLPoints() {
-   TradeMain.SLPoints(TradeMain.Decrement(TradeMain.SLPoints())); 
-   sl_field_.Text((string)TradeMain.SLPoints()); 
+   int      target_value   = TradeMain.Decrement(TradeMain.SLPoints());
+   if (!ValidFieldInput(IntegerToString(target_value))) return; 
+   TradeMain.SLPoints(target_value); 
+   sl_field_.Text((string)TradeMain.SLPoints());
+   UpdateRiskReward();
 }
-
-void        CTradeApp::OnEndEditSLField() {}
-
-void        CTradeApp::OnEndEditTPField() {}
 
 void        CTradeApp::OnClickIncrementTPPoints() {
-   TradeMain.TPPoints(TradeMain.Increment(TradeMain.TPPoints())); 
-   tp_field_.Text((string)TradeMain.TPPoints()); 
+   int      target_value   = TradeMain.Increment(TradeMain.TPPoints());
+   if (!ValidFieldInput(IntegerToString(target_value))) return; 
+   TradeMain.TPPoints(target_value); 
+   tp_field_.Text((string)TradeMain.TPPoints());
+   UpdateRiskReward();
 } 
 
-void        CTradeApp::OnClickDecrementTPPoints() {
-   TradeMain.TPPoints(TradeMain.Decrement(TradeMain.TPPoints()));
+void        CTradeApp::OnClickDecrementTPPoints() {   
+   int      target_value   = TradeMain.Decrement(TradeMain.TPPoints()); 
+   if (!ValidFieldInput(IntegerToString(target_value))) return; 
+   TradeMain.TPPoints(target_value); 
    tp_field_.Text((string)TradeMain.TPPoints());
+   UpdateRiskReward();
 }
 
-void        CTradeApp::OnChangeSLCheckbox() {
-   bool  checked  = sl_checkbox_.Checked(); 
-   Log_.LogInformation(StringFormat("Checked: %s", (string)checked), __FUNCTION__); 
-}
-
-void        CTradeApp::OnChangeTPCheckbox() {
-   bool  checked  = tp_checkbox_.Checked();
-   Log_.LogInformation(StringFormat("Checked: %s", (string)checked), __FUNCTION__); 
-}
-
-void        CTradeApp::OnEndEditLotsField() {
-   //--- Parse Numeric only 
-   //--- Throw error if not numeric 
-   //--- Must be >= minlots
-   Log_.LogInformation("Edited", __FUNCTION__);
-}
 
 void        CTradeApp::OnClickIncrementBEPoints() {
-   TradeMain.BEPoints(TradeMain.Increment(TradeMain.BEPoints()));
+   int   target_value   = TradeMain.Increment(TradeMain.BEPoints()); 
+   if (!ValidFieldInput(IntegerToString(target_value))) return; 
+   TradeMain.BEPoints(target_value); 
    be_field_.Text((string)TradeMain.BEPoints());
 }
 
 void        CTradeApp::OnClickDecrementBEPoints() {
-   TradeMain.BEPoints(TradeMain.Decrement(TradeMain.BEPoints()));
+   int target_value  = TradeMain.Decrement(TradeMain.BEPoints());
+   if (!ValidFieldInput(IntegerToString(target_value))) return; 
+   TradeMain.BEPoints(target_value); 
    be_field_.Text((string)TradeMain.BEPoints());
 }
 
+
+
+//+------------------------------------------------------------------+
+//| FIELDS                                                           |
+//+------------------------------------------------------------------+
+void        CTradeApp::OnEndEditSLField() {
+   if (!ValidPointsField(sl_field_)) return; 
+   TradeMain.SLPoints((int)StringToInteger(sl_field_.Text()));
+   sl_field_.Text((string)TradeMain.SLPoints()); 
+   UpdateRiskReward();
+}
+
+void        CTradeApp::OnEndEditTPField() {
+   
+   if (!ValidPointsField(tp_field_)) return; 
+   TradeMain.TPPoints((int)StringToInteger(tp_field_.Text()));
+   tp_field_.Text((string)TradeMain.TPPoints()); 
+   UpdateRiskReward();
+
+}
+
+
+void        CTradeApp::OnEndEditLotsField() {
+
+   string target_value  = lots_field_.Text(); 
+   if (!ValidFieldInput(target_value)) {
+      ValidationError(ERR_NON_NUMERIC, target_value, __FUNCTION__);
+      return;
+   }
+   if (!ValidLots((double)StringToDouble(target_value))) {
+      ValidationError(ERR_INVALID_ADJUST, target_value, __FUNCTION__);
+      return;
+   }
+   
+   TradeMain.Lots((double)StringToDouble(target_value));
+   lots_field_.Text((string)TradeMain.Lots());
+   UpdateRiskReward();
+}
+
+
 void        CTradeApp::OnEndEditBEField() {
+   if (!ValidPointsField(be_field_)) return; 
+   TradeMain.BEPoints((int)StringToInteger(be_field_.Text()));
+   be_field_.Text((string)TradeMain.BEPoints()); 
    
 }
 
-void        CTradeApp::OnChangeBECheckbox() {}
 
-void        CTradeApp::OnClickBEAllPositions() {}
 
-void        CTradeApp::OnClickCloseAllPositions() {}
+//+------------------------------------------------------------------+
+//| CHECKBOX                                                         |
+//+------------------------------------------------------------------+
+
+void        CTradeApp::OnChangeSLCheckbox() {
+   TradeMain.SLEnabled(sl_checkbox_.Checked()); 
+   Log_.LogInformation(StringFormat("SL Enabled: %s", (string)TradeMain.SLEnabled()), __FUNCTION__); 
+}
+
+void        CTradeApp::OnChangeTPCheckbox() {
+   TradeMain.TPEnabled(tp_checkbox_.Checked()); 
+   Log_.LogInformation(StringFormat("TP Enabled: %s", (string)TradeMain.TPEnabled()), __FUNCTION__); 
+}
+
+
+void        CTradeApp::OnChangeBECheckbox() {
+   TradeMain.BEEnabled(be_checkbox_.Checked());
+   Log_.LogInformation(StringFormat("BE Enabled: %s", (string)TradeMain.BEEnabled()), __FUNCTION__); 
+}
+
+
+
+//+------------------------------------------------------------------+
+//| BATCH OPERATIONS                                                 |
+//+------------------------------------------------------------------+
+void        CTradeApp::OnClickBEAllPositions() {
+   
+   TradeMain.BreakevenAllPositions(); 
+}
+   
+void        CTradeApp::OnClickCloseAllPositions() {
+   TradeMain.CloseAllPositions(); 
+}
 
 void        CTradeApp::OnClickNews() {}
+
+
+//+------------------------------------------------------------------+
+//| VALIDATION                                                       |
+//+------------------------------------------------------------------+
+
+bool        CTradeApp::ValidLots(double value) {
+   if (value < UTIL_SYMBOL_MINLOT()) return false; 
+   if (value > UTIL_SYMBOL_MAXLOT()) return false; 
+   return true; 
+}
+
+bool        CTradeApp::ValidPoints(int value) {
+   
+   if (value < TradeMain.MinPoints()) return false; 
+   if (value < 0) return false; 
+   return true; 
+}
+
+
+bool        CTradeApp::ValidFieldInput(string input_string) {
+   /**
+      Validates input field. Returns false if non-numerical character is found.
+   **/
+   int ch; 
+   for (int i = 0; i < StringLen(input_string); i++) {
+      ch = StringGetCharacter(input_string, i); 
+      if (ch > 57) return false;
+      if (ch < 48 && ch != 46) return false; 
+   }
+   return true; 
+}
+
+bool        CTradeApp::ValidPointsField(CEdit &field) {
+   /**
+      Validates input string and points value for sl, tp, be input fields.
+   **/
+   string target_value  = field.Text(); 
+   if (!ValidFieldInput(target_value)) {
+      ValidationError(ERR_NON_NUMERIC, target_value, __FUNCTION__);
+      return false;
+   }
+   if (!ValidPoints((int)StringToInteger(target_value))) {
+      ValidationError(ERR_INVALID_ADJUST, target_value, __FUNCTION__);
+      return false;
+   }
+   return true; 
+}
+
+
+void        CTradeApp::ValidationError(ENUM_VALIDATION_ERROR error,string target_value, string func) {
+   string message; 
+   switch(error) {
+      case ERR_NON_NUMERIC: 
+         message  = "Field contains non-numeric character."; 
+         break;
+      case ERR_INVALID_ADJUST:
+         message  = "Value Limit Reached."; 
+         break; 
+      default:
+         message  = "Unkown Error."; 
+         break; 
+   }
+   Log_.LogInformation(StringFormat("Error. %s Source: %s, Value: %s", message, func, target_value), __FUNCTION__); 
+}
+
+bool        CTradeApp::TradingAllowed() {
+   if (!TerminalInfoInteger(TERMINAL_TRADE_ALLOWED)) {
+      MessageBox("Error. Autotrading is disabled.", "Terminal Error");
+      return false; 
+   }
+   return true; 
+}
+//+------------------------------------------------------------------+
+//| UPDATING                                                         |
+//+------------------------------------------------------------------+
 
 void        CTradeApp::UpdateValuesOnTick() {
    ask_label_.Text(UTIL_PRICE_STIRNG(UTIL_PRICE_ASK())); 
    bid_label_.Text(UTIL_PRICE_STIRNG(UTIL_PRICE_BID())); 
 
+}
+
+void        CTradeApp::UpdateRiskReward() {
+   TradeMain.CalculateRiskParameters(); 
+   risk_value_label_.Text(DollarValue(TradeMain.RiskUSD())); 
+   reward_value_label_.Text(DollarValue(TradeMain.RewardUSD())); 
 }
 
 string      CTradeApp::BuyButtonString() const  { return StringFormat("Buy: %.5f", UTIL_PRICE_ASK()); }

@@ -5,6 +5,10 @@ class CTradeMgr : public CTradeOps {
 private:
    double         lots_;
    int            sl_points_, tp_points_, be_points_, step_, min_points_; 
+   bool           sl_enabled_, tp_enabled_, be_enabled_; 
+   
+   //-- Risk Parameters
+   double         risk_usd_, reward_usd_; 
 public:
    CTradeMgr();
    ~CTradeMgr() {};
@@ -27,14 +31,31 @@ public:
    int      Step() const         { return step_; }
    void     Step(int value)      { step_ = value; }
    
+   bool     SLEnabled() const    { return sl_enabled_; }
+   void     SLEnabled(bool value){ sl_enabled_ = value; } 
+   
+   bool     TPEnabled() const    { return tp_enabled_; } 
+   void     TPEnabled(bool value){ tp_enabled_ = value; }    
+   
+   bool     BEEnabled() const    { return be_enabled_; }
+   void     BEEnabled(bool value){ be_enabled_ = value; }
    
    int      Increment(int value) { return value += Step(); }
    int      Decrement(int value) { return value -= Step(); }
    
+   double   RiskUSD() const      { return risk_usd_; }
+   double   RewardUSD() const    { return reward_usd_; }
+   
+   
    void     OrderSendMarketBuy();
    void     OrderSendMarketSell();
    
+   void     CalculateRiskParameters(); 
+   double   PointsToTicks(int points); 
+   double   TicksToUSD(double ticks); 
    
+   int      BreakevenAllPositions();
+   int      CloseAllPositions(); 
 }; 
 
 
@@ -45,14 +66,79 @@ CTradeMgr::CTradeMgr()
    , tp_points_(100)
    , be_points_(50)
    , min_points_(50)
-   , step_(10) {}
+   , step_(10)
+   , sl_enabled_(false)
+   , tp_enabled_(false)
+   , be_enabled_(false) {
+   
+   CalculateRiskParameters(); 
+}
 
 
 
 void        CTradeMgr::OrderSendMarketBuy() {
-   Log_.LogInformation(StringFormat("Market Buy. Lot Size: %f SL Points: %i, TP Points: %i", Lots(), SLPoints(), TPPoints()), __FUNCTION__);
+   double sl_price = sl_enabled_ ? UTIL_PRICE_ASK() - PointsToTicks(sl_points_) : 0; 
+   double tp_price = tp_enabled_ ? UTIL_PRICE_ASK() + PointsToTicks(tp_points_) : 0; 
+   int ticket = OP_OrderOpen(Symbol(), ORDER_TYPE_BUY, Lots(), UTIL_PRICE_ASK(), sl_price, tp_price, "MGR"); 
+   if (!ticket) Log_.LogError("ORDER SEND FAILED.", __FUNCTION__); 
+   
+   
 }
 
 void        CTradeMgr::OrderSendMarketSell() {
-   Log_.LogInformation(StringFormat("Market Sell. Lot SIze: %f SL Points: %i, TP Points: %i", Lots(), SLPoints(), TPPoints()), __FUNCTION__);
+   double sl_price = sl_enabled_ ? UTIL_PRICE_BID() + PointsToTicks(sl_points_) : 0; 
+   double tp_price = tp_enabled_ ? UTIL_PRICE_BID() - PointsToTicks(tp_points_) : 0; 
+
+   int ticket = OP_OrderOpen(Symbol(), ORDER_TYPE_SELL, Lots(), UTIL_PRICE_BID(), sl_price, tp_price, "MGR"); 
+   if (!ticket) Log_.LogError("ORDER SEND FAILED.", __FUNCTION__); 
+   
+}
+
+
+
+void        CTradeMgr::CalculateRiskParameters() {
+   // convert points to ticks 
+   
+   risk_usd_         = TicksToUSD(PointsToTicks(sl_points_));
+   reward_usd_       = TicksToUSD(PointsToTicks(tp_points_)); 
+   Log_.LogInformation(StringFormat("Risk: %.2f, Reward: %.2f", risk_usd_, reward_usd_), __FUNCTION__);
+   
+}
+
+double      CTradeMgr::PointsToTicks(int points) {
+   return points * UTIL_TRADE_PTS(); 
+}
+
+double      CTradeMgr::TicksToUSD(double ticks) {
+   return ((ticks * lots_ * UTIL_TICK_VAL()) / UTIL_TRADE_PTS()); 
+}
+
+int         CTradeMgr::BreakevenAllPositions() {
+   if (PosTotal() == 0) {
+      Log_.LogInformation("No trades to modify. Order pool is empty.", __FUNCTION__); 
+      return 0; 
+   }
+   
+   Log_.LogInformation(StringFormat("%i trades found. Attempting to set breakeven.", 
+      PosTotal()), __FUNCTION__);
+   int s, ticket, num_modified; 
+   
+   for (int i = 0; i < PosTotal(); i++) {
+      s  = OP_OrderSelectByIndex(i);
+      ticket = PosTicket(); 
+      
+      if (!OP_ModifySL(ticket, PosOpenPrice())) continue; 
+      num_modified++;
+   }
+   return num_modified;
+}
+
+int         CTradeMgr::CloseAllPositions() {
+   if (PosTotal() == 0) {
+      Log_.LogInformation("No trades to close. Order Pool is empty.", __FUNCTION__);
+      return 0; 
+   }
+   Log_.LogInformation(StringFormat("%i trades found. Attempting to close.", 
+      PosTotal()), __FUNCTION__); 
+   return OP_OrdersCloseAll(); 
 }

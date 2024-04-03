@@ -15,6 +15,8 @@ CTradeApp      app(GetPointer(trade_main));
 int OnInit()
   {
 //---
+   string input_string  = "123dfsa3"; 
+   PrintFormat("Input: %s Valid: %s", input_string, (string)ValidInputs(input_string));
    app.Init(); 
    
 //---
@@ -49,4 +51,32 @@ void OnChartEvent(
    const string& sparam
 ) {
    app.ChartEvent(id,lparam,dparam,sparam); 
+   
+   
+}
+
+
+
+void  ReadCharacters() {
+   //valid characters 48-57 and 46
+   string charstr = "1234567890."; 
+   
+   for (int i = 0; i < StringLen(charstr); i++) {
+      int ch   = StringGetCharacter(charstr, i);
+      string char_string = CharToString(ch);
+      PrintFormat("Element: %s, Character: %i", char_string, ch); 
+   }
+   
+}
+
+bool     ValidInputs(string input_string) {
+
+   
+   int ch; 
+   for (int i = 0; i < StringLen(input_string); i++) {
+      ch = StringGetCharacter(input_string, i); 
+      if (ch > 57) return false; 
+      if (ch < 48 && ch != 46) return false;
+   }
+   return true; 
 }

@@ -31,7 +31,7 @@
 #define MAIN_BT_PRICE_FONTSIZE      10
 
 #define PRICE_FIELD_INDENT_TOP      10 
-#define PRICE_FIELD_INDENT_LEFT     30  
+#define PRICE_FIELD_INDENT_LEFT     38  
 #define PRICE_FIELD_HEIGHT          20
 #define PRICE_FIELD_WIDTH           130
 #define ADJ_BUTTON_SIZE             20
@@ -55,3 +55,11 @@
 #define INDENT_BOTTOM                       (11)      // indent from bottom (with allowance for border width)
 #define CONTROLS_GAP_X                      (5)       // gap by X coordinate
 #define CONTROLS_GAP_Y                      (5)  
+
+
+enum ENUM_VALIDATION_ERROR {
+   ERR_NON_NUMERIC, 
+   ERR_INVALID_ADJUST
+}; 
+
+ 
