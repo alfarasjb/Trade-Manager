@@ -22,6 +22,8 @@
 #define     BUTTON_HEIGHT  50
 
 #define  CONTROLS_FONT_SIZE      8
+#define  SUBTITLE_FONT_SIZE      9
+#define  FIELD_LABEL_FONT_SIZE   8  
 #define     COLUMN_1       10 
 #define     COLUMN_2       120 
 #define     COLUMN_3       230 

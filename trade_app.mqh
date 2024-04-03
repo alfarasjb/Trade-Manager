@@ -211,11 +211,11 @@ bool        CTradeApp::CreateTextField(
    if (!field.Text(field_text)) return false; 
    if (!Add(field)) return false; 
    //if (!field_label.Create(0, label_name+"_label", 0, x2-Scale(5), y1 + Scale(1), x2, y2)) return false; 
-   if (!field_label.Create(0, label_name+"_label", 0, scaled_x2-Scale(5), scaled_y1 + Scale(1), scaled_x2, scaled_y2)) return false; 
+   if (!field_label.Create(0, label_name+"_label", 0, scaled_x2-Scale(5), scaled_y1 + Scale(2), scaled_x2, scaled_y2)) return false; 
    if (!field_label.Text(label_text)) return false; 
    
    if (!ObjectSetInteger(0, field_label.Name(), OBJPROP_ANCHOR, ANCHOR_RIGHT_UPPER)) return false; 
-   //if (!field_label.FontSize(Scale(7))) return false;
+   if (!field_label.FontSize(FIELD_LABEL_FONT_SIZE)) return false;
    if (!Add(field_label)) return false; 
    return true; 
    
@@ -270,8 +270,8 @@ bool        CTradeApp::CreateSLRow() {
     
    int checkbox_x1   = inc_bt_x2_ + CHECKBOX_X_GAP;  
    int checkbox_y1   = y1 + CHECKBOX_Y_GAP; 
-   int checkbox_x2   = checkbox_x1 + Scale(CHECKBOX_WIDTH);
-   int checkbox_y2   = checkbox_y1 + Scale(CHECKBOX_HEIGHT);
+   int checkbox_x2   = checkbox_x1 + CHECKBOX_WIDTH;
+   int checkbox_y2   = checkbox_y1 + CHECKBOX_HEIGHT;
    
    if (!CreateTextField(sl_field_, sl_label_, "SL Field", (string)TradeMain.SLPoints(), "Points-SL","Points", dec_bt_x2_, y1)) return false; 
    
@@ -321,12 +321,9 @@ bool        CTradeApp::CreateLabel(
    int scaled_x2  = Scale(x2);
    int scaled_y1  = Scale(y1);
    int scaled_y2  = Scale(y2); 
-   int scaled_font   = Scale(font_size); 
-   Print("Font: ", font_size);
-   Print("Scale: ", scaled_font); 
    if (!lbl.Create(0, name, 0, scaled_x1, scaled_y1, scaled_x2, scaled_y2)) return false; 
    if (!lbl.Text(text)) return false; 
-   //if (!lbl.FontSize(scaled_font)) return false; 
+   if (!lbl.FontSize(SUBTITLE_FONT_SIZE)) return false; 
    if (!Add(lbl)) return false;  
    
    return true;   
@@ -350,8 +347,8 @@ bool        CTradeApp::CreateTPRow() {
     
    int checkbox_x1   = inc_bt_x2_ + CHECKBOX_X_GAP;  
    int checkbox_y1   = y1 + CHECKBOX_Y_GAP; 
-   int checkbox_x2   = checkbox_x1 + Scale(CHECKBOX_WIDTH);
-   int checkbox_y2   = checkbox_y1 + Scale(CHECKBOX_HEIGHT);
+   int checkbox_x2   = checkbox_x1 + CHECKBOX_WIDTH;
+   int checkbox_y2   = checkbox_y1 + CHECKBOX_HEIGHT;
    
    if (!CreateTextField(tp_field_, tp_label_, "TP Field", (string)TradeMain.TPPoints(), "Points-TP", "Points", dec_bt_x2_, y1)) return false; 
    if (!CreateAdjustButton(increment_tp_bt_, "AddTP", inc_bt_x1_, y1, inc_bt_x2_, adj_button_y2, "+")) return false; 
@@ -382,8 +379,8 @@ bool        CTradeApp::CreateBERow() {
     
    int checkbox_x1   = inc_bt_x2_ + CHECKBOX_X_GAP;  
    int checkbox_y1   = y1 + CHECKBOX_Y_GAP; 
-   int checkbox_x2   = checkbox_x1 + Scale(CHECKBOX_WIDTH);
-   int checkbox_y2   = checkbox_y1 + Scale(CHECKBOX_HEIGHT);
+   int checkbox_x2   = checkbox_x1 + CHECKBOX_WIDTH;
+   int checkbox_y2   = checkbox_y1 + CHECKBOX_HEIGHT;
    
    
    if (!CreateTextField(be_field_, be_label_, "BE Field", (string)TradeMain.BEPoints(), "Points-BE", "Points", dec_bt_x2_, y1)) return false; 
@@ -474,27 +471,27 @@ bool        CTradeApp::CreateWideButton(
 bool        CTradeApp::CreateBEAllButton() {
    
    int x1   = dec_bt_x1_; 
-   int x2   = x1 + WIDE_BUTTON_WIDTH; 
+   int x2   = x1 + Scale(WIDE_BUTTON_WIDTH); 
    int y1   = be_field_.Top() - Scale(10); 
-   int y2   = y1 + WIDE_BUTTON_HEIGHT; 
+   int y2   = y1 + Scale(WIDE_BUTTON_HEIGHT); 
    if (!CreateWideButton(be_all_bt_, "BEAll", x1, y1, x2, y2, "BE All Positions")) return false; 
    return true; 
 }
 
 bool        CTradeApp::CreateCloseAllButton() {
    int x1   = dec_bt_x1_;
-   int x2   = x1 + WIDE_BUTTON_WIDTH;
-   int y1   = be_all_bt_.Top() - Scale(10);
-   int y2   = y1 + WIDE_BUTTON_HEIGHT; 
+   int x2   = x1 + Scale(WIDE_BUTTON_WIDTH);
+   int y1   = be_all_bt_.Top();
+   int y2   = y1 + Scale(WIDE_BUTTON_HEIGHT); 
    if (!CreateWideButton(close_all_bt_, "CloseAll", x1, y1, x2, y2, "Close All Positions")) return false; 
    return true; 
 }
 
 bool        CTradeApp::CreateNewsButton() {
    int x1   = dec_bt_x1_; 
-   int x2   = x1 + WIDE_BUTTON_WIDTH; 
-   int y1   = close_all_bt_.Top() - Scale(10); 
-   int y2   = y1 + WIDE_BUTTON_HEIGHT; 
+   int x2   = x1 + Scale(WIDE_BUTTON_WIDTH); 
+   int y1   = close_all_bt_.Top(); 
+   int y2   = y1 + Scale(WIDE_BUTTON_HEIGHT); 
    
    if (!CreateWideButton(news_bt_, "News", x1, y1, x2, y2, "News")) return false; 
    return true; 
