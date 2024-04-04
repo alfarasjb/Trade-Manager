@@ -760,7 +760,7 @@ bool        CTradeApp::TradingAllowed() {
 void        CTradeApp::UpdateValuesOnTick() {
    ask_label_.Text(UTIL_PRICE_STRING(UTIL_PRICE_ASK())); 
    bid_label_.Text(UTIL_PRICE_STRING(UTIL_PRICE_BID())); 
-
+   TradeMain.BreakevenValidPositions(TradeMain.BEPoints()); 
 }
 
 void        CTradeApp::UpdateRiskReward() {
