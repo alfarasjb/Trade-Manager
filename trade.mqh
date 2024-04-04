@@ -158,6 +158,7 @@ int         CTradeMgr::CloseAllPositions() {
    if (PosTotal() != 0) Log_.LogInformation(StringFormat("Not all orders were closed. Num Extracted: %i, Remaining: %i", 
       num_extracted, 
       PosTotal()), __FUNCTION__); 
+   delete tickets; 
    return num_extracted; 
 }
 
