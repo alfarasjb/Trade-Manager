@@ -16,33 +16,41 @@
 #define     MAIN_PANEL_Y1  20
 #define     MAIN_PANEL_X2  250 
 #define     MAIN_PANEL_Y2  400 
+#define     MAIN_PANEL_WIDTH  240
+#define     MAIN_PANEL_HEIGHT 380
 #define     BUTTON_WIDTH   100 
 #define     BUTTON_HEIGHT  50
 
 #define  CONTROLS_FONT_SIZE      8
+#define  SUBTITLE_FONT_SIZE      9
+#define  FIELD_LABEL_FONT_SIZE   8  
 #define     COLUMN_1       10 
 #define     COLUMN_2       120 
 #define     COLUMN_3       230 
 
-
+#define MAIN_BT_INDENT_TOP          8 
+   
+#define MAIN_BT_LABEL_HEIGHT        45
+#define MAIN_BT_LABEL_WIDTH         100
 #define MAIN_BT_LABEL_INDENT_LEFT   11 
-#define MAIN_BT_LABEL_INDENT_TOP    5
+#define MAIN_BT_LABEL_INDENT_TOP    28
 #define MAIN_BT_ORDER_FONTSIZE      12 
 #define MAIN_BT_PRICE_FONTSIZE      10
 
 #define PRICE_FIELD_INDENT_TOP      10 
-#define PRICE_FIELD_INDENT_LEFT     38  
+//#define PRICE_FIELD_INDENT_LEFT     38  
+#define PRICE_FIELD_INDENT_LEFT     30
 #define PRICE_FIELD_HEIGHT          20
 #define PRICE_FIELD_WIDTH           130
 #define ADJ_BUTTON_SIZE             20
 
 #define CHECKBOX_X_GAP              5
 #define CHECKBOX_Y_GAP              2 
-#define CHECKBOX_WIDTH              50 
-#define CHECKBOX_HEIGHT             15
+#define CHECKBOX_WIDTH              40 
+#define CHECKBOX_HEIGHT             18
 
-#define WIDE_BUTTON_WIDTH     210 
-#define WIDE_BUTTON_HEIGHT    30 
+#define WIDE_BUTTON_WIDTH     210
+#define WIDE_BUTTON_HEIGHT    28
 
 
 #define BUY_BUTTON_COLOR            clrDodgerBlue 

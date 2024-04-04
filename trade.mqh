@@ -55,6 +55,7 @@ public:
    double   TicksToUSD(double ticks); 
    
    int      BreakevenAllPositions();
+   int      BreakevenValidPositions(int points_distance); 
    int      CloseAllPositions(); 
 }; 
 
@@ -158,4 +159,38 @@ int         CTradeMgr::CloseAllPositions() {
       num_extracted, 
       PosTotal()), __FUNCTION__); 
    return num_extracted; 
+}
+
+
+int         CTradeMgr::BreakevenValidPositions(int points_distance) {
+   if (!BEEnabled()) return 0; 
+   if (PosTotal() == 0) return 0; 
+   
+   double tick_distance = PointsToTicks(points_distance); 
+   int num_modified = 0; 
+   for (int i = 0; i < PosTotal(); i++) {
+      int s = OP_OrderSelectByIndex(i);
+      //--- Skip trades in floating loss
+      if (PosProfit() < 0) continue; 
+      //--- Skip trades already set to BE 
+      if (PosOpenPrice() == PosSL()) continue; 
+      double tick_diff; 
+      switch(PosOrderType()) {
+         case ORDER_TYPE_BUY:
+            tick_diff = MathAbs(PosOpenPrice() - UTIL_PRICE_BID()); 
+            break;
+         case ORDER_TYPE_SELL: 
+            tick_diff = MathAbs(PosOpenPrice() - UTIL_PRICE_ASK()); 
+            break;
+         default:
+            continue; 
+      }
+      //--- Skip trades with trade diff below required threshold
+      if (tick_diff < tick_distance) continue; 
+      if (!OP_ModifySL(PosTicket(), PosOpenPrice())) continue; 
+      num_modified++; 
+   }
+   if (num_modified > 0) Log_.LogInformation(StringFormat("%i trades set to breakeven.", num_modified), __FUNCTION__);
+   return num_modified; 
+
 }

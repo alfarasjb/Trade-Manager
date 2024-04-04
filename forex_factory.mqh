@@ -1,9 +1,7 @@
 
 
 
-#include "../dependencies/definition.mqh"
-
-
+#include "definition.mqh"
 
 class CNewsEvents{
 
