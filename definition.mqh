@@ -1,4 +1,6 @@
 
+#include <RECURVE/CalendarDownloader.mqh> 
+
 #include <Controls/Defines.mqh> 
 #include <Controls/Dialog.mqh>
 #include <Controls/Button.mqh>
@@ -20,6 +22,11 @@
 #define     MAIN_PANEL_HEIGHT 380
 #define     BUTTON_WIDTH   100 
 #define     BUTTON_HEIGHT  50
+
+#define     NEWS_PANEL_X1  10 
+#define     NEWS_PANEL_Y1  20 
+#define     NEWS_PANEL_WIDTH 300
+#define     NEWS_PANEL_HEIGHT 380
 
 #define  CONTROLS_FONT_SIZE      8
 #define  SUBTITLE_FONT_SIZE      9
@@ -70,4 +77,9 @@ enum ENUM_VALIDATION_ERROR {
    ERR_INVALID_ADJUST
 }; 
 
- 
+input bool                    InpTradeOnNews       = false; // TRADE ON NEWS
+input Source                  InpNewsSource        = R4F_WEEKLY; // NEWS SOURCE
+
+
+const string   FXFACTORY_DIRECTORY  = "recurve\\ff_news";
+const string   R4F_DIRECTORY        = "recurve\\r4f_news";

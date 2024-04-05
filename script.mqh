@@ -29,6 +29,7 @@ void OnDeinit(const int reason)
 //---
    ObjectsDeleteAll(0, -1, -1); 
    app.Destroy(reason); 
+   News.Destroy(reason); 
   }
 //+------------------------------------------------------------------+
 //| Expert tick function                                             |

@@ -1,5 +1,6 @@
 #include "definition.mqh"
 #include "trade.mqh"
+#include "news_panel.mqh"
 
 /**
 TODO:
@@ -7,7 +8,8 @@ TODO:
 2. Negative Values 
 3. Calculation of risk/reward
 **/
-
+//--- News 
+CNewsPanel  News; 
 class CTradeApp : public CAppDialog {
 protected:
 private:
@@ -29,14 +31,20 @@ private:
             
             //--- Minor Elements
             CLabel      lots_label_, sl_label_, tp_label_, be_label_; 
+            
+            
+            
+            //--- Subwindow
+            CAppDialog  *ActiveDialog; 
 
 public:
    CTradeApp(CTradeMgr *trade);
    ~CTradeApp();
-   
+            
    
             void     Init(); 
    virtual  bool     Create(const long chart, const string name, const int subwin, const int x1, const int y1, const int x2, const int y2); 
+   virtual  void     Minimize(); 
    virtual  bool     ButtonCreate(CButton &bt, const string name, const int x1, const int y1); 
    virtual  bool     CreateMarketOrderButton(CButton &bt, CLabel &order_label, CLabel &price_label, const string name, const int x1, const int y1, double price, const color button_color); 
    virtual  bool     CreateLabel(CLabel &lbl, const string name, const int x1, const int y1, const int x2, const int y2, const string text, const int font_size); 
@@ -124,6 +132,12 @@ public:
             bool     ValidPointsField(CEdit &field); 
             void     ValidationError(ENUM_VALIDATION_ERROR error, string target_value, string func); 
             bool     TradingAllowed(); 
+            
+            bool     PageIsOpen(string panel_name);
+            string   ActiveName();
+            void     CloseActiveWindow(); 
+            
+            template <typename T>   bool  OpenPage(T &page); 
 }; 
 
 CTradeApp::CTradeApp(CTradeMgr *trade) : TradeMain(trade) {
@@ -148,7 +162,7 @@ CTradeApp::CTradeApp(CTradeMgr *trade) : TradeMain(trade) {
 }
 
 CTradeApp::~CTradeApp() {
-
+   delete ActiveDialog;
    delete Log_;
 }
 
@@ -679,8 +693,52 @@ void        CTradeApp::OnClickCloseAllPositions() {
    TradeMain.CloseAllPositions(); 
 }
 
-void        CTradeApp::OnClickNews() {}
+void        CTradeApp::OnClickNews() {
+   
+   CNewsPanel  *news    = (CNewsPanel*)GetPointer(News); 
+   string   panel_name  = news.NAME(); 
+   if (PageIsOpen(panel_name)) return; 
+   if (!OpenPage(news)) Log_.LogError(StringFormat("Failed to open panel: %s", panel_name), __FUNCTION__); 
+   
+}
 
+string      CTradeApp::ActiveName() {
+   if (CheckPointer(ActiveDialog) == POINTER_INVALID) return ""; 
+   CAppDialog *d  = (CAppDialog*)GetPointer(ActiveDialog); 
+   return d.Caption(); 
+}
+
+bool        CTradeApp::PageIsOpen(string panel_name) {
+   string name = ActiveName(); 
+   
+   if (CheckPointer(ActiveDialog) != POINTER_INVALID) {
+      ActiveDialog.Destroy(1); 
+   }
+   if (name == panel_name) {
+      CloseActiveWindow(); 
+      return true; 
+   }
+   return false; 
+}
+
+template <typename T>
+bool        CTradeApp::OpenPage(T &Page) {
+   if (!Page.Create()) return false; 
+   Page.Run();
+   ActiveDialog   = Page; 
+   return true; 
+}
+
+void        CTradeApp::CloseActiveWindow() {
+   CAppDialog *pt = (CAppDialog*)GetPointer(ActiveDialog);
+   delete ActiveDialog; 
+}
+
+void        CTradeApp::Minimize() {
+   if (CheckPointer(ActiveDialog) != POINTER_INVALID) ActiveDialog.Destroy(1); 
+   CloseActiveWindow(); 
+   CAppDialog::Minimize(); 
+}
 
 //+------------------------------------------------------------------+
 //| VALIDATION                                                       |
