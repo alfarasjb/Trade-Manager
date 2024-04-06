@@ -36,6 +36,10 @@ private:
             
             //--- Subwindow
             CAppDialog  *ActiveDialog; 
+            
+            //--- Start Edit Last Stored Values 
+            double      stored_lot_; 
+            int         stored_sl_, stored_tp_, stored_be_; 
 
 public:
    CTradeApp(CTradeMgr *trade);
@@ -73,17 +77,21 @@ public:
             void     OnClickMarketSell(); 
             void     OnClickIncrementLots();
             void     OnClickDecrementLots(); 
+            void     OnStartEditLotsField(); 
             void     OnEndEditLotsField();
             void     OnClickIncrementSLPoints();
             void     OnClickDecrementSLPoints();
+            void     OnStartEditSLField(); 
             void     OnEndEditSLField();
             void     OnClickIncrementTPPoints(); 
             void     OnClickDecrementTPPoints(); 
+            void     OnStartEditTPField(); 
             void     OnEndEditTPField(); 
             void     OnChangeSLCheckbox();
             void     OnChangeTPCheckbox();
             void     OnClickIncrementBEPoints();
             void     OnClickDecrementBEPoints(); 
+            void     OnStartEditBEField(); 
             void     OnEndEditBEField();
             void     OnChangeBECheckbox(); 
             void     OnClickBEAllPositions();
@@ -99,22 +107,26 @@ public:
    ON_EVENT(ON_CLICK, bid_label_, OnClickMarketSell);  
    ON_EVENT(ON_CLICK, increment_lot_bt_, OnClickIncrementLots);
    ON_EVENT(ON_CLICK, decrement_lot_bt_, OnClickDecrementLots); 
-   ON_EVENT(ON_END_EDIT, lots_field_, OnEndEditLotsField);
    ON_EVENT(ON_CLICK, increment_sl_bt_, OnClickIncrementSLPoints);
    ON_EVENT(ON_CLICK, decrement_sl_bt_, OnClickDecrementSLPoints);
-   ON_EVENT(ON_END_EDIT, sl_field_, OnEndEditSLField);
    ON_EVENT(ON_CLICK, increment_tp_bt_, OnClickIncrementTPPoints);
    ON_EVENT(ON_CLICK, decrement_tp_bt_, OnClickDecrementTPPoints);
-   ON_EVENT(ON_END_EDIT, tp_field_, OnEndEditTPField); 
    ON_EVENT(ON_CHANGE, sl_checkbox_, OnChangeSLCheckbox);
    ON_EVENT(ON_CHANGE, tp_checkbox_, OnChangeTPCheckbox);
    ON_EVENT(ON_CLICK, increment_be_bt_, OnClickIncrementBEPoints);
    ON_EVENT(ON_CLICK, decrement_be_bt_, OnClickDecrementBEPoints); 
-   ON_EVENT(ON_END_EDIT, be_field_, OnEndEditBEField); 
    ON_EVENT(ON_CHANGE, be_checkbox_, OnChangeBECheckbox);  
    ON_EVENT(ON_CLICK, be_all_bt_, OnClickBEAllPositions); 
    ON_EVENT(ON_CLICK, close_all_bt_, OnClickCloseAllPositions); 
    ON_EVENT(ON_CLICK, news_bt_, OnClickNews);  
+   ON_EVENT(ON_START_EDIT, lots_field_, OnStartEditLotsField); 
+   ON_EVENT(ON_END_EDIT, lots_field_, OnEndEditLotsField);
+   ON_EVENT(ON_START_EDIT, sl_field_, OnStartEditSLField); 
+   ON_EVENT(ON_END_EDIT, sl_field_, OnEndEditSLField);
+   ON_EVENT(ON_START_EDIT, tp_field_, OnStartEditTPField); 
+   ON_EVENT(ON_END_EDIT, tp_field_, OnEndEditTPField); 
+   ON_EVENT(ON_START_EDIT, be_field_, OnStartEditBEField); 
+   ON_EVENT(ON_END_EDIT, be_field_, OnEndEditBEField); 
    EVENT_MAP_END(CAppDialog)
    
    //--- UTILITY
@@ -128,9 +140,10 @@ public:
             string   SellButtonString() const;
            
             bool     ValidPoints(int value);
+            bool     ValidValue(double value); 
             bool     ValidLots(double value); 
             bool     ValidFieldInput(string input_string); 
-            bool     ValidPointsField(CEdit &field); 
+            bool     ValidPointsField(CEdit &field, int default_value); 
             void     ValidationError(ENUM_VALIDATION_ERROR error, string target_value, string func); 
             bool     TradingAllowed(); 
             
@@ -613,8 +626,25 @@ void        CTradeApp::OnClickDecrementBEPoints() {
 //+------------------------------------------------------------------+
 //| FIELDS                                                           |
 //+------------------------------------------------------------------+
+
+void        CTradeApp::OnStartEditLotsField() {
+   stored_lot_ = StringToDouble(lots_field_.Text()); 
+}
+
+void        CTradeApp::OnStartEditSLField() {
+   stored_sl_  = StringToDouble(sl_field_.Text()); 
+}
+
+void        CTradeApp::OnStartEditTPField() {
+   stored_tp_  = StringToDouble(tp_field_.Text());
+}
+
+void        CTradeApp::OnStartEditBEField() {
+   stored_be_  = StringToDouble(be_field_.Text()); 
+}
+
 void        CTradeApp::OnEndEditSLField() {
-   if (!ValidPointsField(sl_field_)) return; 
+   if (!ValidPointsField(sl_field_, stored_sl_)) return; 
    TradeMain.SLPoints((int)StringToInteger(sl_field_.Text()));
    sl_field_.Text((string)TradeMain.SLPoints()); 
    UpdateRiskReward();
@@ -622,23 +652,24 @@ void        CTradeApp::OnEndEditSLField() {
 
 void        CTradeApp::OnEndEditTPField() {
    
-   if (!ValidPointsField(tp_field_)) return; 
+   if (!ValidPointsField(tp_field_, stored_tp_)) return; 
    TradeMain.TPPoints((int)StringToInteger(tp_field_.Text()));
    tp_field_.Text((string)TradeMain.TPPoints()); 
    UpdateRiskReward();
 
 }
 
-
 void        CTradeApp::OnEndEditLotsField() {
 
    string target_value  = lots_field_.Text(); 
    if (!ValidFieldInput(target_value)) {
       ValidationError(ERR_NON_NUMERIC, target_value, __FUNCTION__);
+      lots_field_.Text(UTIL_LOT_STRING(stored_lot_)); 
       return;
    }
    if (!ValidLots((double)StringToDouble(target_value))) {
       ValidationError(ERR_INVALID_ADJUST, target_value, __FUNCTION__);
+      lots_field_.Text(UTIL_LOT_STRING(stored_lot_)); 
       return;
    }
    
@@ -649,7 +680,7 @@ void        CTradeApp::OnEndEditLotsField() {
 
 
 void        CTradeApp::OnEndEditBEField() {
-   if (!ValidPointsField(be_field_)) return; 
+   if (!ValidPointsField(be_field_, stored_be_)) return; 
    TradeMain.BEPoints((int)StringToInteger(be_field_.Text()));
    be_field_.Text((string)TradeMain.BEPoints()); 
    
@@ -742,9 +773,14 @@ void        CTradeApp::Minimize() {
 //| VALIDATION                                                       |
 //+------------------------------------------------------------------+
 
+bool        CTradeApp::ValidValue(double value) {
+   return value > 0; 
+}
+
 bool        CTradeApp::ValidLots(double value) {
    if (value < UTIL_SYMBOL_MINLOT()) return false; 
    if (value > UTIL_SYMBOL_MAXLOT()) return false; 
+   if (value < 0) return false;
    return true; 
 }
 
@@ -769,17 +805,19 @@ bool        CTradeApp::ValidFieldInput(string input_string) {
    return true; 
 }
 
-bool        CTradeApp::ValidPointsField(CEdit &field) {
+bool        CTradeApp::ValidPointsField(CEdit &field, int default_value) {
    /**
       Validates input string and points value for sl, tp, be input fields.
    **/
    string target_value  = field.Text(); 
    if (!ValidFieldInput(target_value)) {
       ValidationError(ERR_NON_NUMERIC, target_value, __FUNCTION__);
+      field.Text(IntegerToString(default_value)); 
       return false;
    }
    if (!ValidPoints((int)StringToInteger(target_value))) {
       ValidationError(ERR_INVALID_ADJUST, target_value, __FUNCTION__);
+      field.Text(IntegerToString(default_value)); 
       return false;
    }
    return true; 
@@ -795,6 +833,9 @@ void        CTradeApp::ValidationError(ENUM_VALIDATION_ERROR error,string target
       case ERR_INVALID_ADJUST:
          message  = "Value Limit Reached."; 
          break; 
+      case ERR_NEGATIVE_VALUE:
+         message  = "Negative value.";
+         break;   
       default:
          message  = "Unkown Error."; 
          break; 

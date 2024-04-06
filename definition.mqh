@@ -74,7 +74,8 @@
 
 enum ENUM_VALIDATION_ERROR {
    ERR_NON_NUMERIC, 
-   ERR_INVALID_ADJUST
+   ERR_INVALID_ADJUST,
+   ERR_NEGATIVE_VALUE
 }; 
 
 input bool                    InpTradeOnNews       = false; // TRADE ON NEWS
