@@ -20,7 +20,7 @@ public:
    void     SLPoints(int value)  { sl_points_ = value; }
    
    int      TPPoints() const     { return tp_points_; }
-   void     TPPoints(int value)  { tp_points_ = value; }
+   void     TPPoints(int value)  { tp_points_ = NormalizeDouble(value, 2); }
    
    int      BEPoints() const     { return be_points_; }
    void     BEPoints(int value)  { be_points_ = value; }
