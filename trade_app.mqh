@@ -122,6 +122,7 @@ public:
             string   DollarValue(double value)  { return StringFormat("$%.2f", value); }
             void     UpdateValuesOnTick(); 
             void     UpdateRiskReward(); 
+            void     UpdateLots(double value); 
             
             string   BuyButtonString() const;
             string   SellButtonString() const;
@@ -262,7 +263,7 @@ bool        CTradeApp::CreateLotsRow() {
    
    int y1   = PRICE_FIELD_INDENT_TOP + BUTTON_HEIGHT + 5;
    
-   if (!CreateTextField(lots_field_, lots_label_, "Lots Field", (string)TradeMain.Lots(), "Lots","Lots", dec_bt_x2_, y1)) return false; 
+   if (!CreateTextField(lots_field_, lots_label_, "Lots Field", StringFormat("%.2f", TradeMain.Lots()), "Lots","Lots", dec_bt_x2_, y1)) return false; 
    if (!CreateAdjustButton(increment_lot_bt_, "Add", inc_bt_x1_, y1, inc_bt_x2_, adj_button_y2, "+")) return false;
    if (!CreateAdjustButton(decrement_lot_bt_, "Subtract", dec_bt_x1_, y1, dec_bt_x2_, adj_button_y2, "-")) return false; 
    return true;  
@@ -549,18 +550,15 @@ void        CTradeApp::OnClickMarketSell() {
 void        CTradeApp::OnClickIncrementLots() {
    double target_value  = TradeMain.Lots() + UTIL_SYMBOL_LOTSTEP(); 
    if (target_value > UTIL_SYMBOL_MAXLOT()) return; 
-   TradeMain.Lots(target_value); 
-   lots_field_.Text((string)TradeMain.Lots());
-   UpdateRiskReward();
+   UpdateLots(target_value); 
 }
 
 void        CTradeApp::OnClickDecrementLots() {
    Log_.LogInformation("Pressed", __FUNCTION__); 
    double target_value  = TradeMain.Lots() - UTIL_SYMBOL_LOTSTEP(); 
    if (target_value < UTIL_SYMBOL_MINLOT()) return; 
-   TradeMain.Lots(target_value); 
-   lots_field_.Text((string)TradeMain.Lots());
-   UpdateRiskReward();
+   UpdateLots(target_value); 
+   
 }
 
 void        CTradeApp::OnClickIncrementSLPoints() {
@@ -825,6 +823,12 @@ void        CTradeApp::UpdateRiskReward() {
    TradeMain.CalculateRiskParameters(); 
    risk_value_label_.Text(DollarValue(TradeMain.RiskUSD())); 
    reward_value_label_.Text(DollarValue(TradeMain.RewardUSD())); 
+}
+
+void        CTradeApp::UpdateLots(double value) {
+   TradeMain.Lots(value);
+   lots_field_.Text(UTIL_LOT_STRING(TradeMain.Lots()));
+   UpdateRiskReward(); 
 }
 
 string      CTradeApp::BuyButtonString() const  { return StringFormat("Buy: %.5f", UTIL_PRICE_ASK()); }
