@@ -14,6 +14,9 @@
 
 
 #undef      CONTROLS_FONT_SIZE
+#undef      CONTROLS_FONT_NAME
+#define     CONTROLS_FONT_NAME      "Calibri"
+
 #define     MAIN_PANEL_X1  10 
 #define     MAIN_PANEL_Y1  20
 #define     MAIN_PANEL_X2  250 
@@ -29,8 +32,8 @@
 #define     NEWS_PANEL_HEIGHT 380
 
 #define  CONTROLS_FONT_SIZE      8
-#define  SUBTITLE_FONT_SIZE      9
-#define  FIELD_LABEL_FONT_SIZE   8  
+#define  SUBTITLE_FONT_SIZE      10
+#define  FIELD_LABEL_FONT_SIZE   9  
 #define     COLUMN_1       10 
 #define     COLUMN_2       120 
 #define     COLUMN_3       230 
@@ -40,9 +43,9 @@
 #define MAIN_BT_LABEL_HEIGHT        45
 #define MAIN_BT_LABEL_WIDTH         100
 #define MAIN_BT_LABEL_INDENT_LEFT   11 
-#define MAIN_BT_LABEL_INDENT_TOP    28
+#define MAIN_BT_LABEL_INDENT_TOP    25
 #define MAIN_BT_ORDER_FONTSIZE      12 
-#define MAIN_BT_PRICE_FONTSIZE      10
+#define MAIN_BT_PRICE_FONTSIZE      11
 
 #define PRICE_FIELD_INDENT_TOP      10 
 //#define PRICE_FIELD_INDENT_LEFT     38  
@@ -58,6 +61,8 @@
 
 #define WIDE_BUTTON_WIDTH     210
 #define WIDE_BUTTON_HEIGHT    28
+#define BUTTON_Y_SPACING      5
+#define TOP_Y_OFFSET          200
 
 
 #define BUY_BUTTON_COLOR            clrDodgerBlue 

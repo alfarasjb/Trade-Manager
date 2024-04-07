@@ -45,6 +45,7 @@ public:
    
    double   RiskUSD() const      { return risk_usd_; }
    double   RewardUSD() const    { return reward_usd_; }
+   double   RiskRewardRatio()    { return RewardUSD() / RiskUSD(); }
    
    
    void     OrderSendMarketBuy();
