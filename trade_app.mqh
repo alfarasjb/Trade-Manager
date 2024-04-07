@@ -33,7 +33,6 @@ private:
             CLabel      lots_label_, sl_label_, tp_label_, be_label_; 
             
             
-            
             //--- Subwindow
             CAppDialog  *ActiveDialog; 
             
@@ -45,6 +44,7 @@ public:
    CTradeApp(CTradeMgr *trade);
    ~CTradeApp();
             
+   CAppDialog        *Actv() const { return ActiveDialog; }
    
             void     Init(); 
    virtual  bool     Create(const long chart, const string name, const int subwin, const int x1, const int y1, const int x2, const int y2); 
@@ -99,12 +99,12 @@ public:
             void     OnClickNews(); 
    //--- EVENT MAPPING 
          EVENT_MAP_BEGIN(CTradeApp) 
-         ON_EVENT(ON_CLICK, market_buy_bt_, OnClickMarketBuy);
-         ON_EVENT(ON_CLICK, buy_label_, OnClickMarketBuy);
-         ON_EVENT(ON_CLICK, ask_label_, OnClickMarketBuy);
-         ON_EVENT(ON_CLICK, market_sell_bt_, OnClickMarketSell);
-         ON_EVENT(ON_CLICK, sell_label_, OnClickMarketSell);
-         ON_EVENT(ON_CLICK, bid_label_, OnClickMarketSell);  
+         ON_NAMED_EVENT(ON_CLICK, market_buy_bt_, OnClickMarketBuy);
+         ON_NAMED_EVENT(ON_CLICK, buy_label_, OnClickMarketBuy);
+         ON_NAMED_EVENT(ON_CLICK, ask_label_, OnClickMarketBuy);
+         ON_NAMED_EVENT(ON_CLICK, market_sell_bt_, OnClickMarketSell);
+         ON_NAMED_EVENT(ON_CLICK, sell_label_, OnClickMarketSell);
+         ON_NAMED_EVENT(ON_CLICK, bid_label_, OnClickMarketSell);  
          ON_EVENT(ON_CLICK, increment_lot_bt_, OnClickIncrementLots);
          ON_EVENT(ON_CLICK, decrement_lot_bt_, OnClickDecrementLots); 
          ON_EVENT(ON_CLICK, increment_sl_bt_, OnClickIncrementSLPoints);
@@ -735,9 +735,11 @@ void        CTradeApp::OnClickNews() {
    
    CNewsPanel  *news    = (CNewsPanel*)GetPointer(News); 
    string   panel_name  = news.NAME(); 
-   if (PageIsOpen(panel_name)) return; 
+   if (PageIsOpen(panel_name) && news.IsVisible()) {
+      return; 
+   }
    if (!OpenPage(news)) Log_.LogError(StringFormat("Failed to open panel: %s", panel_name), __FUNCTION__); 
-   
+  
 }
 
 string      CTradeApp::ActiveName() {
@@ -763,11 +765,12 @@ template <typename T>
 bool        CTradeApp::OpenPage(T &Page) {
    if (!Page.Create()) return false; 
    Page.Run();
-   ActiveDialog   = Page; 
+   ActiveDialog   = Page;
+   ActiveDialog.Visible(true);  
    return true; 
 }
 
-void        CTradeApp::CloseActiveWindow() {
+void        CTradeApp::CloseActiveWindow() { 
    CAppDialog *pt = (CAppDialog*)GetPointer(ActiveDialog);
    delete ActiveDialog; 
 }

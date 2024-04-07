@@ -49,8 +49,14 @@ void OnChartEvent(
    const double& dparam, 
    const string& sparam
 ) {
+   CAppDialog *actv  = (CAppDialog*)app.Actv(); 
    app.ChartEvent(id,lparam,dparam,sparam); 
    
+   if (CheckPointer(actv) != POINTER_INVALID) {
+      actv.ChartEvent(id, lparam, dparam, sparam);
+   }
+   //if (CHARTEVENT_OBJECT_CLICK) PrintFormat("Id: %i, Lparam: %i, Dparam: %f, Sparam: %s", id, lparam, dparam, sparam); 
+   //CAppDialog  *actv = (CAppDialog*)app.Actv(); 
    
 }
 
