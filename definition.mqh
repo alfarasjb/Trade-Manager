@@ -21,7 +21,7 @@
 #define     MAIN_PANEL_Y1  20
 #define     MAIN_PANEL_X2  250 
 #define     MAIN_PANEL_Y2  400 
-#define     MAIN_PANEL_WIDTH  240
+#define     MAIN_PANEL_WIDTH  250
 #define     MAIN_PANEL_HEIGHT 380
 #define     BUTTON_WIDTH   100 
 #define     BUTTON_HEIGHT  50
@@ -62,7 +62,7 @@
 #define WIDE_BUTTON_WIDTH     210
 #define WIDE_BUTTON_HEIGHT    28
 #define BUTTON_Y_SPACING      5
-#define TOP_Y_OFFSET          200
+#define TOP_Y_OFFSET          190
 
 
 #define BUY_BUTTON_COLOR            clrDodgerBlue 

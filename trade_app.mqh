@@ -13,24 +13,32 @@ CNewsPanel  News;
 class CTradeApp : public CAppDialog {
 protected:
 private:
-            double      dpi_scale_; 
             
+            double      dpi_scale_; 
+            CTradeMgr   *TradeMain;
             CLogging    *Log_;
             
+            //--- Adjustment Buttons
             CButton     market_buy_bt_, market_sell_bt_, increment_lot_bt_, decrement_lot_bt_, increment_sl_bt_, decrement_sl_bt_, increment_tp_bt_, decrement_tp_bt_;
-            CButton     increment_be_bt_, decrement_be_bt_, be_all_bt_, close_all_bt_, news_bt_;  
-            CTradeMgr      *TradeMain;
+            CButton     increment_be_bt_, decrement_be_bt_, increment_trail_bt_, decrement_trail_bt_;  
             
+            //--- Batch Buttons 
+            CButton     be_all_bt_, close_all_bt_, news_bt_, trail_all_bt_;
+            
+            
+            //-- Labels
             CLabel      ask_label_, buy_label_, bid_label_, sell_label_; 
             CLabel      risk_label_, risk_value_label_, reward_label_, reward_value_label_, risk_reward_label_, risk_reward_value_label_; 
-            CEdit       lots_field_, sl_field_, tp_field_, be_field_;
+            
+            //--- Fields
+            CEdit       lots_field_, sl_field_, tp_field_, be_field_, trail_field_;
             int         col_1_, col_2_; 
 
             int         inc_bt_x1_, inc_bt_x2_, dec_bt_x1_, dec_bt_x2_;
-            CCheckBox   sl_checkbox_, tp_checkbox_, be_checkbox_; 
+            CCheckBox   sl_checkbox_, tp_checkbox_, be_checkbox_, trail_checkbox_; 
             
             //--- Minor Elements
-            CLabel      lots_label_, sl_label_, tp_label_, be_label_; 
+            CLabel      lots_label_, sl_label_, tp_label_, be_label_, trail_label_; 
             
             
             //--- Subwindow
@@ -63,10 +71,12 @@ public:
    virtual  bool     CreateSLRow();
    virtual  bool     CreateTPRow(); 
    virtual  bool     CreateBERow(); 
+   virtual  bool     CreateTrailRow();
    
    //--- OTHER BUTTONS
    virtual  bool     CreateCloseAllButton();
    virtual  bool     CreateBEAllButton(); 
+   virtual  bool     CreateTrailAllButton();
    virtual  bool     CreateNewsButton(); 
    //--- NEWS TAB
    
@@ -94,9 +104,17 @@ public:
             void     OnStartEditBEField(); 
             void     OnEndEditBEField();
             void     OnChangeBECheckbox(); 
+            
             void     OnClickBEAllPositions();
             void     OnClickCloseAllPositions();
             void     OnClickNews(); 
+            
+            void     OnClickIncrementTrailPoints();
+            void     OnClickDecrementTrailPoints(); 
+            void     OnStartEditTrailField();
+            void     OnEndEditTrailField();
+            void     OnChangeTrailCheckbox(); 
+            void     OnClickTrailAllPositions(); 
    //--- EVENT MAPPING 
          EVENT_MAP_BEGIN(CTradeApp) 
          ON_NAMED_EVENT(ON_CLICK, market_buy_bt_, OnClickMarketBuy);
@@ -127,6 +145,11 @@ public:
          ON_EVENT(ON_END_EDIT, tp_field_, OnEndEditTPField); 
          ON_EVENT(ON_START_EDIT, be_field_, OnStartEditBEField); 
          ON_EVENT(ON_END_EDIT, be_field_, OnEndEditBEField); 
+         ON_EVENT(ON_CLICK, increment_trail_bt_, OnClickIncrementTrailPoints);
+         ON_EVENT(ON_CLICK, decrement_trail_bt_, OnClickDecrementTrailPoints);
+         ON_EVENT(ON_CLICK, trail_all_bt_, OnClickTrailAllPositions); 
+         ON_EVENT(ON_START_EDIT, trail_field_, OnStartEditTrailField);
+         ON_EVENT(ON_END_EDIT, trail_field_, OnEndEditTrailField);          
          EVENT_MAP_END(CAppDialog)
    
    //--- UTILITY
@@ -207,7 +230,9 @@ bool        CTradeApp::Create(
    if (!CreateSLRow()) return false;
    if (!CreateTPRow()) return false;
    if (!CreateBERow()) return false; 
+   if (!CreateTrailRow()) return false;
    if (!CreateBEAllButton()) return false; 
+   if (!CreateTrailAllButton()) return false; 
    
    if (!CreateCloseAllButton()) return false; 
    
@@ -428,6 +453,7 @@ bool        CTradeApp::CreateSLRow() {
    if (!CreateAdjustButton(increment_sl_bt_, "AddSL", inc_bt_x1_, y1, inc_bt_x2_, adj_button_y2, "+")) return false; 
    if (!CreateAdjustButton(decrement_sl_bt_, "SubSL", dec_bt_x1_, y1, dec_bt_x2_, adj_button_y2, "-")) return false;
    if (!CreateCheckbox(sl_checkbox_, "SLCheckbox", checkbox_x1, checkbox_y1, checkbox_x2, checkbox_y2, "SL")) return false; 
+   if (!sl_checkbox_.Checked(TradeMain.SLEnabled())) return false; 
    
    int   risk_y   = adj_button_y2 + 5; 
    if (!CreateLabel(risk_label_, "Risk", dec_bt_x1_, risk_y, inc_bt_x2_, risk_y, "Risk", 7)) return false; 
@@ -454,7 +480,8 @@ bool        CTradeApp::CreateTPRow() {
    if (!CreateAdjustButton(decrement_tp_bt_, "SubTP", dec_bt_x1_, y1, dec_bt_x2_, adj_button_y2, "-")) return false; 
 
    if (!CreateCheckbox(tp_checkbox_, "TPCheckbox", checkbox_x1, checkbox_y1, checkbox_x2, checkbox_y2, "TP")) return false;
-
+   if (!tp_checkbox_.Checked(TradeMain.TPEnabled())) return false; 
+   
    int   reward_y   = adj_button_y2 + 5; 
    
    if (!CreateLabel(reward_label_, "Reward", dec_bt_x1_, reward_y, inc_bt_x2_, reward_y, "Reward", 7)) return false; 
@@ -480,8 +507,25 @@ bool        CTradeApp::CreateBERow() {
    if (!CreateAdjustButton(increment_be_bt_, "AddBE", inc_bt_x1_, y1, inc_bt_x2_, adj_button_y2, "+")) return false; 
    if (!CreateAdjustButton(decrement_be_bt_, "SubBE", dec_bt_x1_, y1, dec_bt_x2_, adj_button_y2, "-")) return false; 
    if (!CreateCheckbox(be_checkbox_, "BECheckbox", checkbox_x1, checkbox_y1, checkbox_x2, checkbox_y2, "BE")) return false; 
-
+   if (!be_checkbox_.Checked(TradeMain.BEEnabled())) return false;  
    return true;
+}
+
+bool        CTradeApp::CreateTrailRow() {
+   int y1   = PRICE_FIELD_INDENT_TOP + ((4*BUTTON_HEIGHT)) + 5; 
+   int adj_button_y2 = y1 + ADJ_BUTTON_SIZE; 
+   
+   int checkbox_x1   = inc_bt_x2_ + CHECKBOX_X_GAP;
+   int checkbox_y1   = y1 + CHECKBOX_Y_GAP;
+   int checkbox_x2   = checkbox_x1 + CHECKBOX_WIDTH;
+   int checkbox_y2   = checkbox_y1 + CHECKBOX_HEIGHT;
+   
+   if (!CreateTextField(trail_field_, trail_label_, "Trail Field", (string)TradeMain.TrailPoints(), "Points-Trail", "Points", dec_bt_x2_, y1)) return false; 
+   if (!CreateAdjustButton(increment_trail_bt_, "AddTrail", inc_bt_x1_, y1, inc_bt_x2_, adj_button_y2, "+")) return false;
+   if (!CreateAdjustButton(decrement_trail_bt_, "SubTrail", dec_bt_x1_, y1, dec_bt_x2_, adj_button_y2, "-")) return false;
+   if (!CreateCheckbox(trail_checkbox_, "TrailCheckbox", checkbox_x1, checkbox_y1, checkbox_x2, checkbox_y2, "TS")) return false; 
+   if (!trail_checkbox_.Checked(TradeMain.TrailEnabled())) return false; 
+   return true; 
 }
 
 bool        CTradeApp::ButtonCreate(CButton &bt,const string name,const int x1,const int y1) {
@@ -495,16 +539,30 @@ bool        CTradeApp::ButtonCreate(CButton &bt,const string name,const int x1,c
 
 
 bool        CTradeApp::CreateBEAllButton() {
-   int top  = CAppDialog::Top(); 
    
    int x1   = dec_bt_x1_; 
-   int x2   = x1 + Scale(WIDE_BUTTON_WIDTH); 
+   int bt_width = (WIDE_BUTTON_WIDTH/2) - 4;  
+   
+   int x2   = x1 + Scale(bt_width); 
    //int y1   = be_field_.Top() - Scale(10); 
    //int y1   = CAppDialog::Top() + Scale(200); 
    int y1   = CAppDialog::Top() + Scale(TOP_Y_OFFSET + WideButtonYOffset(1)); 
    int y2   = y1 + Scale(WIDE_BUTTON_HEIGHT); 
-   if (!CreateWideButton(be_all_bt_, "BEAll", x1, y1, x2, y2, "BE All Positions")) return false; 
+   if (!CreateWideButton(be_all_bt_, "BEAll", x1, y1, x2, y2, "BE All")) return false; 
    return true; 
+}
+
+bool        CTradeApp::CreateTrailAllButton() {
+   int terminal_width = CAppDialog::Right() - CAppDialog::Left() - MAIN_PANEL_X1; 
+   //int x1   = Scale(WIDE_BUTTON_WIDTH / 2);
+   int bt_width   = (WIDE_BUTTON_WIDTH/2) - 4; 
+   int x1   = (terminal_width / 2); 
+   int x2   = x1 + Scale(bt_width)-1;
+   int y1   = CAppDialog::Top() + Scale(TOP_Y_OFFSET + WideButtonYOffset(1));
+   int y2   = y1 + Scale(WIDE_BUTTON_HEIGHT);
+   
+   if (!CreateWideButton(trail_all_bt_, "TrailAll", x1, y1, x2, y2, "Trail All ")) return false;
+   return true;
 }
 
 bool        CTradeApp::CreateCloseAllButton() {
@@ -576,7 +634,6 @@ void        CTradeApp::OnClickIncrementLots() {
 }
 
 void        CTradeApp::OnClickDecrementLots() {
-   Log_.LogInformation("Pressed", __FUNCTION__); 
    double target_value  = TradeMain.Lots() - UTIL_SYMBOL_LOTSTEP(); 
    if (target_value < UTIL_SYMBOL_MINLOT()) return; 
    UpdateLots(target_value); 
@@ -630,7 +687,13 @@ void        CTradeApp::OnClickDecrementBEPoints() {
    be_field_.Text((string)TradeMain.BEPoints());
 }
 
+void        CTradeApp::OnClickIncrementTrailPoints() {
+   Log_.LogInformation("Function not implemented", __FUNCTION__);
+}
 
+void        CTradeApp::OnClickDecrementTrailPoints() {
+   Log_.LogInformation("Function not implemented", __FUNCTION__); 
+}
 
 //+------------------------------------------------------------------+
 //| FIELDS                                                           |
@@ -695,6 +758,14 @@ void        CTradeApp::OnEndEditBEField() {
    
 }
 
+void        CTradeApp::OnStartEditTrailField() {
+   Log_.LogInformation("Function not implemented", __FUNCTION__); 
+}
+
+void        CTradeApp::OnEndEditTrailField() {
+   Log_.LogInformation("Function not implemented", __FUNCTION__); 
+}
+
 
 
 //+------------------------------------------------------------------+
@@ -717,11 +788,19 @@ void        CTradeApp::OnChangeBECheckbox() {
    Log_.LogInformation(StringFormat("BE Enabled: %s", (string)TradeMain.BEEnabled()), __FUNCTION__); 
 }
 
+void        CTradeApp::OnChangeTrailCheckbox() {
+   Log_.LogInformation("Function not implemented", __FUNCTION__); 
+}
 
 
 //+------------------------------------------------------------------+
 //| BATCH OPERATIONS                                                 |
 //+------------------------------------------------------------------+
+
+void        CTradeApp::OnClickTrailAllPositions() {
+   Log_.LogInformation("Function not implemented", __FUNCTION__); 
+}
+
 void        CTradeApp::OnClickBEAllPositions() {
    
    TradeMain.BreakevenAllPositions(); 
@@ -896,5 +975,5 @@ string      CTradeApp::SellButtonString() const { return StringFormat("Sell: %.5
 //+------------------------------------------------------------------+
 
 int         CTradeApp::WideButtonYOffset(int row) {
-   return ((row-1)*(WIDE_BUTTON_HEIGHT+BUTTON_Y_SPACING)); 
+   return ((row)*(WIDE_BUTTON_HEIGHT+BUTTON_Y_SPACING)); 
 }

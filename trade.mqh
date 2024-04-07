@@ -4,8 +4,8 @@
 class CTradeMgr : public CTradeOps {
 private:
    double         lots_;
-   int            sl_points_, tp_points_, be_points_, step_, min_points_; 
-   bool           sl_enabled_, tp_enabled_, be_enabled_; 
+   int            sl_points_, tp_points_, be_points_, trail_points_, step_, min_points_; 
+   bool           sl_enabled_, tp_enabled_, be_enabled_, trail_enabled_; 
    
    //-- Risk Parameters
    double         risk_usd_, reward_usd_; 
@@ -25,6 +25,9 @@ public:
    int      BEPoints() const     { return be_points_; }
    void     BEPoints(int value)  { be_points_ = value; }
    
+   int      TrailPoints() const  { return trail_points_; }
+   void     TrailPoints(int value) { trail_points_ = value; }
+   
    int      MinPoints() const    { return min_points_; }
    void     MinPoints(int value) { min_points_ = value; }
       
@@ -39,6 +42,9 @@ public:
    
    bool     BEEnabled() const    { return be_enabled_; }
    void     BEEnabled(bool value){ be_enabled_ = value; }
+   
+   bool     TrailEnabled() const { return trail_enabled_; }
+   void     TrailEnabled(bool value) { trail_enabled_ = value; }
    
    int      Increment(int value) { return value += Step(); }
    int      Decrement(int value) { return value -= Step(); }
@@ -67,11 +73,13 @@ CTradeMgr::CTradeMgr()
    , sl_points_(100)
    , tp_points_(100)
    , be_points_(50)
+   , trail_points_(50)
    , min_points_(50)
    , step_(10)
    , sl_enabled_(false)
    , tp_enabled_(false)
-   , be_enabled_(false) {
+   , be_enabled_(false)
+   , trail_enabled_(false) {
    
    CalculateRiskParameters(); 
 }
