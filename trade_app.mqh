@@ -22,7 +22,7 @@ private:
             CTradeMgr      *TradeMain;
             
             CLabel      ask_label_, buy_label_, bid_label_, sell_label_; 
-            CLabel      risk_label_, risk_value_label_, reward_label_, reward_value_label_; 
+            CLabel      risk_label_, risk_value_label_, reward_label_, reward_value_label_, risk_reward_label_, risk_reward_value_label_; 
             CEdit       lots_field_, sl_field_, tp_field_, be_field_;
             int         col_1_, col_2_; 
 
@@ -98,39 +98,40 @@ public:
             void     OnClickCloseAllPositions();
             void     OnClickNews(); 
    //--- EVENT MAPPING 
-   EVENT_MAP_BEGIN(CTradeApp) 
-   ON_EVENT(ON_CLICK, market_buy_bt_, OnClickMarketBuy);
-   ON_EVENT(ON_CLICK, buy_label_, OnClickMarketBuy);
-   ON_EVENT(ON_CLICK, ask_label_, OnClickMarketBuy);
-   ON_EVENT(ON_CLICK, market_sell_bt_, OnClickMarketSell);
-   ON_EVENT(ON_CLICK, sell_label_, OnClickMarketSell);
-   ON_EVENT(ON_CLICK, bid_label_, OnClickMarketSell);  
-   ON_EVENT(ON_CLICK, increment_lot_bt_, OnClickIncrementLots);
-   ON_EVENT(ON_CLICK, decrement_lot_bt_, OnClickDecrementLots); 
-   ON_EVENT(ON_CLICK, increment_sl_bt_, OnClickIncrementSLPoints);
-   ON_EVENT(ON_CLICK, decrement_sl_bt_, OnClickDecrementSLPoints);
-   ON_EVENT(ON_CLICK, increment_tp_bt_, OnClickIncrementTPPoints);
-   ON_EVENT(ON_CLICK, decrement_tp_bt_, OnClickDecrementTPPoints);
-   ON_EVENT(ON_CHANGE, sl_checkbox_, OnChangeSLCheckbox);
-   ON_EVENT(ON_CHANGE, tp_checkbox_, OnChangeTPCheckbox);
-   ON_EVENT(ON_CLICK, increment_be_bt_, OnClickIncrementBEPoints);
-   ON_EVENT(ON_CLICK, decrement_be_bt_, OnClickDecrementBEPoints); 
-   ON_EVENT(ON_CHANGE, be_checkbox_, OnChangeBECheckbox);  
-   ON_EVENT(ON_CLICK, be_all_bt_, OnClickBEAllPositions); 
-   ON_EVENT(ON_CLICK, close_all_bt_, OnClickCloseAllPositions); 
-   ON_EVENT(ON_CLICK, news_bt_, OnClickNews);  
-   ON_EVENT(ON_START_EDIT, lots_field_, OnStartEditLotsField); 
-   ON_EVENT(ON_END_EDIT, lots_field_, OnEndEditLotsField);
-   ON_EVENT(ON_START_EDIT, sl_field_, OnStartEditSLField); 
-   ON_EVENT(ON_END_EDIT, sl_field_, OnEndEditSLField);
-   ON_EVENT(ON_START_EDIT, tp_field_, OnStartEditTPField); 
-   ON_EVENT(ON_END_EDIT, tp_field_, OnEndEditTPField); 
-   ON_EVENT(ON_START_EDIT, be_field_, OnStartEditBEField); 
-   ON_EVENT(ON_END_EDIT, be_field_, OnEndEditBEField); 
-   EVENT_MAP_END(CAppDialog)
+         EVENT_MAP_BEGIN(CTradeApp) 
+         ON_EVENT(ON_CLICK, market_buy_bt_, OnClickMarketBuy);
+         ON_EVENT(ON_CLICK, buy_label_, OnClickMarketBuy);
+         ON_EVENT(ON_CLICK, ask_label_, OnClickMarketBuy);
+         ON_EVENT(ON_CLICK, market_sell_bt_, OnClickMarketSell);
+         ON_EVENT(ON_CLICK, sell_label_, OnClickMarketSell);
+         ON_EVENT(ON_CLICK, bid_label_, OnClickMarketSell);  
+         ON_EVENT(ON_CLICK, increment_lot_bt_, OnClickIncrementLots);
+         ON_EVENT(ON_CLICK, decrement_lot_bt_, OnClickDecrementLots); 
+         ON_EVENT(ON_CLICK, increment_sl_bt_, OnClickIncrementSLPoints);
+         ON_EVENT(ON_CLICK, decrement_sl_bt_, OnClickDecrementSLPoints);
+         ON_EVENT(ON_CLICK, increment_tp_bt_, OnClickIncrementTPPoints);
+         ON_EVENT(ON_CLICK, decrement_tp_bt_, OnClickDecrementTPPoints);
+         ON_EVENT(ON_CHANGE, sl_checkbox_, OnChangeSLCheckbox);
+         ON_EVENT(ON_CHANGE, tp_checkbox_, OnChangeTPCheckbox);
+         ON_EVENT(ON_CLICK, increment_be_bt_, OnClickIncrementBEPoints);
+         ON_EVENT(ON_CLICK, decrement_be_bt_, OnClickDecrementBEPoints); 
+         ON_EVENT(ON_CHANGE, be_checkbox_, OnChangeBECheckbox);  
+         ON_EVENT(ON_CLICK, be_all_bt_, OnClickBEAllPositions); 
+         ON_EVENT(ON_CLICK, close_all_bt_, OnClickCloseAllPositions); 
+         ON_EVENT(ON_CLICK, news_bt_, OnClickNews);  
+         ON_EVENT(ON_START_EDIT, lots_field_, OnStartEditLotsField); 
+         ON_EVENT(ON_END_EDIT, lots_field_, OnEndEditLotsField);
+         ON_EVENT(ON_START_EDIT, sl_field_, OnStartEditSLField); 
+         ON_EVENT(ON_END_EDIT, sl_field_, OnEndEditSLField);
+         ON_EVENT(ON_START_EDIT, tp_field_, OnStartEditTPField); 
+         ON_EVENT(ON_END_EDIT, tp_field_, OnEndEditTPField); 
+         ON_EVENT(ON_START_EDIT, be_field_, OnStartEditBEField); 
+         ON_EVENT(ON_END_EDIT, be_field_, OnEndEditBEField); 
+         EVENT_MAP_END(CAppDialog)
    
    //--- UTILITY
             int      Scale(double value)  { return (int)MathRound(value * dpi_scale_); }
+            int      WideButtonYOffset(int row); 
             string   DollarValue(double value)  { return StringFormat("$%.2f", value); }
             void     UpdateValuesOnTick(); 
             void     UpdateRiskReward(); 
@@ -173,6 +174,7 @@ CTradeApp::CTradeApp(CTradeMgr *trade) : TradeMain(trade) {
    dec_bt_x2_  = dec_bt_x1_ + ADJ_BUTTON_SIZE; 
    Log_  = new CLogging(true, false, false);
    
+   
 }
 
 CTradeApp::~CTradeApp() {
@@ -214,6 +216,11 @@ bool        CTradeApp::Create(
 
 }
 
+//+------------------------------------------------------------------+
+//| TEMPLATES                                                        |
+//+------------------------------------------------------------------+
+
+
 bool        CTradeApp::CreateTextField(
    CEdit &field, 
    CLabel &field_label, 
@@ -237,13 +244,15 @@ bool        CTradeApp::CreateTextField(
    if (!field.Create(0, field_name, 0, scaled_x1, scaled_y1, scaled_x2, scaled_y2)) return false; 
    if (!field.TextAlign(ALIGN_CENTER)) return false;
    if (!field.Text(field_text)) return false; 
+   if (!field.Font(CONTROLS_FONT_NAME)) return false; 
    if (!Add(field)) return false; 
    //if (!field_label.Create(0, label_name+"_label", 0, x2-Scale(5), y1 + Scale(1), x2, y2)) return false; 
-   if (!field_label.Create(0, label_name+"_label", 0, scaled_x2-Scale(5), scaled_y1 + Scale(2), scaled_x2, scaled_y2)) return false; 
+   if (!field_label.Create(0, label_name+"_label", 0, scaled_x2-Scale(5), scaled_y1 + Scale(3), scaled_x2, scaled_y2)) return false; 
    if (!field_label.Text(label_text)) return false; 
    
    if (!ObjectSetInteger(0, field_label.Name(), OBJPROP_ANCHOR, ANCHOR_RIGHT_UPPER)) return false; 
    if (!field_label.FontSize(FIELD_LABEL_FONT_SIZE)) return false;
+   if (!field_label.Font(CONTROLS_FONT_NAME)) return false; 
    if (!Add(field_label)) return false; 
    return true; 
    
@@ -265,54 +274,12 @@ bool        CTradeApp::CreateAdjustButton(
    int scaled_y2  = Scale(y2); 
    if (!bt.Create(0, name, 0, scaled_x1, scaled_y1, scaled_x2, scaled_y2)) return false; 
    if (!bt.Text(text)) return false;
+   if (!bt.Font(CONTROLS_FONT_NAME)) return false; 
    if (!Add(bt)) return false; 
    
    return true; 
 }
 
-bool        CTradeApp::CreateLotsRow() {
-   int adj_button_y1 = PRICE_FIELD_INDENT_TOP + BUTTON_HEIGHT + 5; 
-   int adj_button_y2 = adj_button_y1 + ADJ_BUTTON_SIZE;  
-   
-   int y1   = PRICE_FIELD_INDENT_TOP + BUTTON_HEIGHT + 5;
-   
-   if (!CreateTextField(lots_field_, lots_label_, "Lots Field", StringFormat("%.2f", TradeMain.Lots()), "Lots","Lots", dec_bt_x2_, y1)) return false; 
-   if (!CreateAdjustButton(increment_lot_bt_, "Add", inc_bt_x1_, y1, inc_bt_x2_, adj_button_y2, "+")) return false;
-   if (!CreateAdjustButton(decrement_lot_bt_, "Subtract", dec_bt_x1_, y1, dec_bt_x2_, adj_button_y2, "-")) return false; 
-   return true;  
-   
-}
-
-bool        CTradeApp::CreateSLRow() {
-   /*
-   int x1   = PRICE_FIELD_INDENT_LEFT; 
-   int y1   = PRICE_FIELD_INDENT_TOP + Scale((1.5*BUTTON_HEIGHT) + 5);
-   int adj_button_y1 = Scale(lots_field_.Bottom() + PRICE_FIELD_HEIGHT);  
-   int adj_button_y2 = y1 + Scale(ADJ_BUTTON_SIZE); 
-   int checkbox_x1   = inc_bt_x2_ + Scale(CHECKBOX_X_GAP); 
-   int checkbox_y1   = y1 + Scale(CHECKBOX_Y_GAP); 
-   int checkbox_x2   = checkbox_x1 + Scale(CHECKBOX_WIDTH);
-   int checkbox_y2   = checkbox_y1 + Scale(CHECKBOX_HEIGHT);*/
-   int y1   = PRICE_FIELD_INDENT_TOP + ((1.5*BUTTON_HEIGHT)) + 5; 
-   int adj_button_y2 = y1 + ADJ_BUTTON_SIZE; 
-    
-   int checkbox_x1   = inc_bt_x2_ + CHECKBOX_X_GAP;  
-   int checkbox_y1   = y1 + CHECKBOX_Y_GAP; 
-   int checkbox_x2   = checkbox_x1 + CHECKBOX_WIDTH;
-   int checkbox_y2   = checkbox_y1 + CHECKBOX_HEIGHT;
-   
-   if (!CreateTextField(sl_field_, sl_label_, "SL Field", (string)TradeMain.SLPoints(), "Points-SL","Points", dec_bt_x2_, y1)) return false; 
-   
-   if (!CreateAdjustButton(increment_sl_bt_, "AddSL", inc_bt_x1_, y1, inc_bt_x2_, adj_button_y2, "+")) return false; 
-   if (!CreateAdjustButton(decrement_sl_bt_, "SubSL", dec_bt_x1_, y1, dec_bt_x2_, adj_button_y2, "-")) return false;
-   if (!CreateCheckbox(sl_checkbox_, "SLCheckbox", checkbox_x1, checkbox_y1, checkbox_x2, checkbox_y2, "SL")) return false; 
-   
-   int   risk_y   = adj_button_y2 + 5; 
-   if (!CreateLabel(risk_label_, "Risk", dec_bt_x1_, risk_y, inc_bt_x2_, risk_y, "Risk", 7)) return false; 
-   if (!CreateLabel(risk_value_label_, "Risk Value", dec_bt_x1_ + Scale(50), risk_y, inc_bt_x2_, risk_y, DollarValue(TradeMain.RiskUSD()), 7)) return false; 
-   
-   return true; 
-}
 
 bool        CTradeApp::CreateCheckbox(
    CCheckBox &box, 
@@ -330,6 +297,7 @@ bool        CTradeApp::CreateCheckbox(
    //if (!box.Create(0, name, 0, x1-20, y1, x2, y2)) return false;
    if (!box.Visible(true)) return false; 
    if (!box.Text(text)) return false; 
+   
    
    //if (!box.Color(clrGreen)) return false;
    if (!Add(box)) return false; 
@@ -352,80 +320,10 @@ bool        CTradeApp::CreateLabel(
    if (!lbl.Create(0, name, 0, scaled_x1, scaled_y1, scaled_x2, scaled_y2)) return false; 
    if (!lbl.Text(text)) return false; 
    if (!lbl.FontSize(SUBTITLE_FONT_SIZE)) return false; 
+   if (!lbl.Font(CONTROLS_FONT_NAME)) return false; 
    if (!Add(lbl)) return false;  
    
    return true;   
-}
-
-
-bool        CTradeApp::CreateTPRow() {
-   /*
-   int x1   = PRICE_FIELD_INDENT_LEFT; 
-   int y1   = PRICE_FIELD_INDENT_TOP + Scale((2.5*BUTTON_HEIGHT) + 5 );
-   int adj_button_y1 = PRICE_FIELD_INDENT_TOP + Scale((BUTTON_HEIGHT * 3) + 5);
-   int adj_button_y2 = y1 + Scale(ADJ_BUTTON_SIZE); 
-   int checkbox_x1   = inc_bt_x2_ + Scale(CHECKBOX_X_GAP); 
-   int checkbox_y1   = y1 + Scale(CHECKBOX_Y_GAP); 
-   int checkbox_x2   = checkbox_x1 + Scale(CHECKBOX_WIDTH);
-   int checkbox_y2   = checkbox_y1 + Scale(CHECKBOX_HEIGHT);*/
-   
-   int x1   = PRICE_FIELD_INDENT_LEFT;
-   int y1   = PRICE_FIELD_INDENT_TOP + ((2.5*BUTTON_HEIGHT)) + 5; 
-   int adj_button_y2 = y1 + ADJ_BUTTON_SIZE; 
-    
-   int checkbox_x1   = inc_bt_x2_ + CHECKBOX_X_GAP;  
-   int checkbox_y1   = y1 + CHECKBOX_Y_GAP; 
-   int checkbox_x2   = checkbox_x1 + CHECKBOX_WIDTH;
-   int checkbox_y2   = checkbox_y1 + CHECKBOX_HEIGHT;
-   
-   if (!CreateTextField(tp_field_, tp_label_, "TP Field", (string)TradeMain.TPPoints(), "Points-TP", "Points", dec_bt_x2_, y1)) return false; 
-   if (!CreateAdjustButton(increment_tp_bt_, "AddTP", inc_bt_x1_, y1, inc_bt_x2_, adj_button_y2, "+")) return false; 
-   if (!CreateAdjustButton(decrement_tp_bt_, "SubTP", dec_bt_x1_, y1, dec_bt_x2_, adj_button_y2, "-")) return false; 
-
-   if (!CreateCheckbox(tp_checkbox_, "TPCheckbox", checkbox_x1, checkbox_y1, checkbox_x2, checkbox_y2, "TP")) return false;
-
-   int   reward_y   = adj_button_y2 + 5; 
-   
-   if (!CreateLabel(reward_label_, "Reward", dec_bt_x1_, reward_y, inc_bt_x2_, reward_y, "Reward", 7)) return false; 
-   if (!CreateLabel(reward_value_label_, "Reward Value", dec_bt_x1_ + Scale(50), reward_y, inc_bt_x2_, reward_y, DollarValue(TradeMain.RewardUSD()), 7)) return false; 
-   
-   return true; 
-}
-
-bool        CTradeApp::CreateBERow() {
-   /*
-   int x1   = PRICE_FIELD_INDENT_LEFT;
-   int y1   = PRICE_FIELD_INDENT_TOP + Scale((3.5*BUTTON_HEIGHT) + 5); 
-   int adj_button_y2 =  y1 + Scale(ADJ_BUTTON_SIZE); 
-   int checkbox_x1   = inc_bt_x2_ + Scale(CHECKBOX_X_GAP); 
-   int checkbox_y1   = y1 + Scale(CHECKBOX_Y_GAP); 
-   int checkbox_x2   = checkbox_x1 + Scale(CHECKBOX_WIDTH);
-   int checkbox_y2   = checkbox_y1 + Scale(CHECKBOX_HEIGHT);*/
-   
-   int y1   = PRICE_FIELD_INDENT_TOP + ((3.5*BUTTON_HEIGHT)) + 5; 
-   int adj_button_y2 = y1 + ADJ_BUTTON_SIZE; 
-    
-   int checkbox_x1   = inc_bt_x2_ + CHECKBOX_X_GAP;  
-   int checkbox_y1   = y1 + CHECKBOX_Y_GAP; 
-   int checkbox_x2   = checkbox_x1 + CHECKBOX_WIDTH;
-   int checkbox_y2   = checkbox_y1 + CHECKBOX_HEIGHT;
-   
-   
-   if (!CreateTextField(be_field_, be_label_, "BE Field", (string)TradeMain.BEPoints(), "Points-BE", "Points", dec_bt_x2_, y1)) return false; 
-   if (!CreateAdjustButton(increment_be_bt_, "AddBE", inc_bt_x1_, y1, inc_bt_x2_, adj_button_y2, "+")) return false; 
-   if (!CreateAdjustButton(decrement_be_bt_, "SubBE", dec_bt_x1_, y1, dec_bt_x2_, adj_button_y2, "-")) return false; 
-   if (!CreateCheckbox(be_checkbox_, "BECheckbox", checkbox_x1, checkbox_y1, checkbox_x2, checkbox_y2, "BE")) return false; 
-
-   return true;
-}
-
-bool        CTradeApp::ButtonCreate(CButton &bt,const string name,const int x1,const int y1) {
-   int x2   = x1 + Scale(BUTTON_WIDTH);
-   int y2   = y1 + Scale(BUTTON_HEIGHT);
-   if (!bt.Create(0, name, 0, x1, y1, x2, y2)) return false; 
-   if (!bt.Text(name)) return false; 
-   if (!Add(bt)) return false; 
-   return true; 
 }
 
 bool        CTradeApp::CreateMarketOrderButton(
@@ -458,12 +356,14 @@ bool        CTradeApp::CreateMarketOrderButton(
    
    if (!price_label.Create(0, name+"_price", 0, label_x1, label_y1, label_x2, label_y2)) return false; 
    if (!price_label.Text(price_string)) return false; 
+   if (!price_label.Font(CONTROLS_FONT_NAME)) return false; 
    if (!price_label.FontSize(MAIN_BT_PRICE_FONTSIZE)) return false;
    if (!price_label.Color(ORDER_BUTTON_FONT_COLOR)) return false; 
    if (!Add(price_label)) return false;
    
-   if (!order_label.Create(0, name+"_order", 0, label_x1, label_y1-Scale(25), label_x2, label_y2)) return false; 
+   if (!order_label.Create(0, name+"_order", 0, label_x1, label_y1-Scale(20), label_x2, label_y2)) return false; 
    if (!order_label.Text(name)) return false; 
+   if (!order_label.Font(CONTROLS_FONT_NAME)) return false; 
    if (!order_label.FontSize(MAIN_BT_ORDER_FONTSIZE)) return false;
    if (!order_label.Color(ORDER_BUTTON_FONT_COLOR)) return false; 
    if (!Add(order_label)) return false; 
@@ -490,37 +390,146 @@ bool        CTradeApp::CreateWideButton(
    int scaled_y2  = Scale(y2); 
    if (!bt.Create(0, name, 0, x1, y1, x2, y2)) return false; 
    if (!bt.Text(text)) return false;
+   if (!bt.Font(CONTROLS_FONT_NAME)) return false; 
    if (!Add(bt)) return false; 
    
    return true; 
 }  
 
+//+------------------------------------------------------------------+
+//| MAIN ELEMENTS                                                    |
+//+------------------------------------------------------------------+
+
+bool        CTradeApp::CreateLotsRow() {
+   int adj_button_y1 = PRICE_FIELD_INDENT_TOP + BUTTON_HEIGHT + 5; 
+   int adj_button_y2 = adj_button_y1 + ADJ_BUTTON_SIZE;  
+   
+   int y1   = PRICE_FIELD_INDENT_TOP + BUTTON_HEIGHT + 5;
+   
+   if (!CreateTextField(lots_field_, lots_label_, "Lots Field", StringFormat("%.2f", TradeMain.Lots()), "Lots","Lots", dec_bt_x2_, y1)) return false; 
+   if (!CreateAdjustButton(increment_lot_bt_, "Add", inc_bt_x1_, y1, inc_bt_x2_, adj_button_y2, "+")) return false;
+   if (!CreateAdjustButton(decrement_lot_bt_, "Subtract", dec_bt_x1_, y1, dec_bt_x2_, adj_button_y2, "-")) return false; 
+   return true;  
+   
+}
+
+bool        CTradeApp::CreateSLRow() {
+
+   int y1   = PRICE_FIELD_INDENT_TOP + ((1.5*BUTTON_HEIGHT)) + 5; 
+   int adj_button_y2 = y1 + ADJ_BUTTON_SIZE; 
+    
+   int checkbox_x1   = inc_bt_x2_ + CHECKBOX_X_GAP;  
+   int checkbox_y1   = y1 + CHECKBOX_Y_GAP; 
+   int checkbox_x2   = checkbox_x1 + CHECKBOX_WIDTH;
+   int checkbox_y2   = checkbox_y1 + CHECKBOX_HEIGHT;
+   
+   if (!CreateTextField(sl_field_, sl_label_, "SL Field", (string)TradeMain.SLPoints(), "Points-SL","Points", dec_bt_x2_, y1)) return false; 
+   
+   if (!CreateAdjustButton(increment_sl_bt_, "AddSL", inc_bt_x1_, y1, inc_bt_x2_, adj_button_y2, "+")) return false; 
+   if (!CreateAdjustButton(decrement_sl_bt_, "SubSL", dec_bt_x1_, y1, dec_bt_x2_, adj_button_y2, "-")) return false;
+   if (!CreateCheckbox(sl_checkbox_, "SLCheckbox", checkbox_x1, checkbox_y1, checkbox_x2, checkbox_y2, "SL")) return false; 
+   
+   int   risk_y   = adj_button_y2 + 5; 
+   if (!CreateLabel(risk_label_, "Risk", dec_bt_x1_, risk_y, inc_bt_x2_, risk_y, "Risk", 7)) return false; 
+   if (!CreateLabel(risk_value_label_, "Risk Value", dec_bt_x1_ + Scale(50), risk_y, inc_bt_x2_, risk_y, DollarValue(TradeMain.RiskUSD()), 7)) return false; 
+   
+   
+   return true; 
+}
+
+
+bool        CTradeApp::CreateTPRow() {
+   
+   int x1   = PRICE_FIELD_INDENT_LEFT;
+   int y1   = PRICE_FIELD_INDENT_TOP + ((2.5*BUTTON_HEIGHT)) + 5; 
+   int adj_button_y2 = y1 + ADJ_BUTTON_SIZE; 
+    
+   int checkbox_x1   = inc_bt_x2_ + CHECKBOX_X_GAP;  
+   int checkbox_y1   = y1 + CHECKBOX_Y_GAP; 
+   int checkbox_x2   = checkbox_x1 + CHECKBOX_WIDTH;
+   int checkbox_y2   = checkbox_y1 + CHECKBOX_HEIGHT;
+   
+   if (!CreateTextField(tp_field_, tp_label_, "TP Field", (string)TradeMain.TPPoints(), "Points-TP", "Points", dec_bt_x2_, y1)) return false; 
+   if (!CreateAdjustButton(increment_tp_bt_, "AddTP", inc_bt_x1_, y1, inc_bt_x2_, adj_button_y2, "+")) return false; 
+   if (!CreateAdjustButton(decrement_tp_bt_, "SubTP", dec_bt_x1_, y1, dec_bt_x2_, adj_button_y2, "-")) return false; 
+
+   if (!CreateCheckbox(tp_checkbox_, "TPCheckbox", checkbox_x1, checkbox_y1, checkbox_x2, checkbox_y2, "TP")) return false;
+
+   int   reward_y   = adj_button_y2 + 5; 
+   
+   if (!CreateLabel(reward_label_, "Reward", dec_bt_x1_, reward_y, inc_bt_x2_, reward_y, "Reward", 7)) return false; 
+   if (!CreateLabel(reward_value_label_, "Reward Value", dec_bt_x1_ + Scale(50), reward_y, inc_bt_x2_, reward_y, DollarValue(TradeMain.RewardUSD()), 7)) return false; 
+   
+   
+   
+   return true; 
+}
+
+bool        CTradeApp::CreateBERow() {
+   
+   int y1   = PRICE_FIELD_INDENT_TOP + ((3.5*BUTTON_HEIGHT)) + 5; 
+   int adj_button_y2 = y1 + ADJ_BUTTON_SIZE; 
+    
+   int checkbox_x1   = inc_bt_x2_ + CHECKBOX_X_GAP;  
+   int checkbox_y1   = y1 + CHECKBOX_Y_GAP; 
+   int checkbox_x2   = checkbox_x1 + CHECKBOX_WIDTH;
+   int checkbox_y2   = checkbox_y1 + CHECKBOX_HEIGHT;
+   
+   
+   if (!CreateTextField(be_field_, be_label_, "BE Field", (string)TradeMain.BEPoints(), "Points-BE", "Points", dec_bt_x2_, y1)) return false; 
+   if (!CreateAdjustButton(increment_be_bt_, "AddBE", inc_bt_x1_, y1, inc_bt_x2_, adj_button_y2, "+")) return false; 
+   if (!CreateAdjustButton(decrement_be_bt_, "SubBE", dec_bt_x1_, y1, dec_bt_x2_, adj_button_y2, "-")) return false; 
+   if (!CreateCheckbox(be_checkbox_, "BECheckbox", checkbox_x1, checkbox_y1, checkbox_x2, checkbox_y2, "BE")) return false; 
+
+   return true;
+}
+
+bool        CTradeApp::ButtonCreate(CButton &bt,const string name,const int x1,const int y1) {
+   int x2   = x1 + Scale(BUTTON_WIDTH);
+   int y2   = y1 + Scale(BUTTON_HEIGHT);
+   if (!bt.Create(0, name, 0, x1, y1, x2, y2)) return false; 
+   if (!bt.Text(name)) return false; 
+   if (!Add(bt)) return false; 
+   return true; 
+}
+
 
 bool        CTradeApp::CreateBEAllButton() {
+   int top  = CAppDialog::Top(); 
    
    int x1   = dec_bt_x1_; 
    int x2   = x1 + Scale(WIDE_BUTTON_WIDTH); 
-   int y1   = be_field_.Top() - Scale(10); 
+   //int y1   = be_field_.Top() - Scale(10); 
+   //int y1   = CAppDialog::Top() + Scale(200); 
+   int y1   = CAppDialog::Top() + Scale(TOP_Y_OFFSET + WideButtonYOffset(1)); 
    int y2   = y1 + Scale(WIDE_BUTTON_HEIGHT); 
    if (!CreateWideButton(be_all_bt_, "BEAll", x1, y1, x2, y2, "BE All Positions")) return false; 
    return true; 
 }
 
 bool        CTradeApp::CreateCloseAllButton() {
+   
+   int row  = 2; 
+   
    int x1   = dec_bt_x1_;
    int x2   = x1 + Scale(WIDE_BUTTON_WIDTH);
    //int y1   = (be_all_bt_.Bottom() / dpi_scale_) + MAIN_PANEL_Y1 + 15;
    //int y1   = PRICE_FIELD_INDENT_TOP + ((6*BUTTON_HEIGHT)) + 5; 
-   int y1   = be_all_bt_.Bottom() - Scale(WIDE_BUTTON_HEIGHT);
+   //int y1   = be_all_bt_.Bottom() - Scale(WIDE_BUTTON_HEIGHT);
+   //int y1   = CAppDialog::Top() + Scale(200 + WIDE_BUTTON_HEIGHT + 5);
+   int y1   = CAppDialog::Top() + Scale(TOP_Y_OFFSET + WideButtonYOffset(2));
    int y2   = y1 + Scale(WIDE_BUTTON_HEIGHT); 
    if (!CreateWideButton(close_all_bt_, "CloseAll", x1, y1, x2, y2, "Close All Positions")) return false; 
    return true; 
 }
 
 bool        CTradeApp::CreateNewsButton() {
+   
    int x1   = dec_bt_x1_; 
    int x2   = x1 + Scale(WIDE_BUTTON_WIDTH); 
-   int y1   = close_all_bt_.Bottom() - Scale(WIDE_BUTTON_HEIGHT); 
+   //int y1   = close_all_bt_.Bottom() - Scale(WIDE_BUTTON_HEIGHT); 
+   //int y1   = CAppDialog::Top() + Scale(200 + (2*(WIDE_BUTTON_HEIGHT + 5))); 
+   int y1     = CAppDialog::Top() + Scale(TOP_Y_OFFSET + WideButtonYOffset(3)); 
    //int y1   = (close_all_bt_.Bottom() / dpi_scale_) + MAIN_PANEL_Y1 + 25;
    
    //int y1   = PRICE_FIELD_INDENT_TOP + ((6.9*BUTTON_HEIGHT)) + 5; 
@@ -848,6 +857,10 @@ bool        CTradeApp::TradingAllowed() {
       MessageBox("Error. Autotrading is disabled.", "Terminal Error");
       return false; 
    }
+   if (!MQLInfoInteger(MQL_TRADE_ALLOWED)) {
+      MessageBox(StringFormat("Error. Automated trading is forbidden in the program settings for %s.", WindowExpertName()));
+      return false; 
+   }
    return true; 
 }
 //+------------------------------------------------------------------+
@@ -874,3 +887,11 @@ void        CTradeApp::UpdateLots(double value) {
 
 string      CTradeApp::BuyButtonString() const  { return StringFormat("Buy: %.5f", UTIL_PRICE_ASK()); }
 string      CTradeApp::SellButtonString() const { return StringFormat("Sell: %.5f", UTIL_PRICE_BID()); }
+
+//+------------------------------------------------------------------+
+//| UTILITY                                                          |
+//+------------------------------------------------------------------+
+
+int         CTradeApp::WideButtonYOffset(int row) {
+   return ((row-1)*(WIDE_BUTTON_HEIGHT+BUTTON_Y_SPACING)); 
+}
