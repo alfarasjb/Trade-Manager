@@ -2,6 +2,8 @@
 
 #include "forex_factory.mqh"
 
+#include <Controls/Listview.mqh>
+
 
 class CNewsPanel : public CAppDialog {
 private: 
@@ -15,6 +17,8 @@ public:
             int         Scale(double value)     { return (int)MathRound(value * dpi_scale_); }
    
    virtual  bool        Create(); 
+   virtual  void        OnClickButtonMinMax(); 
+   virtual  void        OnClickButtonClose(); 
 
 }; 
 
@@ -22,9 +26,7 @@ public:
 CNewsPanel::CNewsPanel() {
    name_ = "news";
    double screen_dpi = (double)TerminalInfoInteger(TERMINAL_SCREEN_DPI);
-   dpi_scale_  = screen_dpi / 96; 
-   
-   
+   dpi_scale_  = screen_dpi / 96;
 
 }
 
@@ -40,3 +42,10 @@ bool        CNewsPanel::Create() {
    if (!CAppDialog::Create(0, name_, 0, x1, y1, x2, y2)) return false; 
    return true;
 }
+
+void        CNewsPanel::OnClickButtonMinMax() {
+   Visible(false); 
+   
+}
+
+void        CNewsPanel::OnClickButtonClose() {}
