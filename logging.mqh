@@ -21,6 +21,7 @@ public:
    virtual     void     LogNotification(string message); 
    virtual     void     LogAlert(string message); 
    virtual     void     LogError(string message, string function); 
+   virtual     void     LogNotImplemented(string function); 
 
 }; 
 
@@ -71,4 +72,8 @@ void        CLogging::LogAlert(string message) {
 void        CLogging::LogError(string message, string function) {
    ResetLastError(); 
    PrintFormat("ERROR - %s: Code: %i, Message: %s", function, GetLastError(), message);
+}
+
+void        CLogging::LogNotImplemented(string function) {
+   PrintFormat("%s: Function not implemented.", __FUNCTION__); 
 }

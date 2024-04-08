@@ -46,7 +46,7 @@ private:
             
             //--- Start Edit Last Stored Values 
             double      stored_lot_; 
-            int         stored_sl_, stored_tp_, stored_be_; 
+            int         stored_sl_, stored_tp_, stored_be_, stored_trail_; 
 
 public:
    CTradeApp(CTradeMgr *trade);
@@ -150,6 +150,7 @@ public:
          ON_EVENT(ON_CLICK, trail_all_bt_, OnClickTrailAllPositions); 
          ON_EVENT(ON_START_EDIT, trail_field_, OnStartEditTrailField);
          ON_EVENT(ON_END_EDIT, trail_field_, OnEndEditTrailField);          
+         ON_EVENT(ON_CHANGE, trail_checkbox_, OnChangeTrailCheckbox);
          EVENT_MAP_END(CAppDialog)
    
    //--- UTILITY
@@ -688,11 +689,17 @@ void        CTradeApp::OnClickDecrementBEPoints() {
 }
 
 void        CTradeApp::OnClickIncrementTrailPoints() {
-   Log_.LogInformation("Function not implemented", __FUNCTION__);
+   int target_value  = TradeMain.Increment(TradeMain.TrailPoints()); 
+   if (!ValidFieldInput(IntegerToString(target_value))) return;
+   TradeMain.TrailPoints(target_value); 
+   trail_field_.Text((string)TradeMain.TrailPoints()); 
 }
 
 void        CTradeApp::OnClickDecrementTrailPoints() {
-   Log_.LogInformation("Function not implemented", __FUNCTION__); 
+   int target_value  = TradeMain.Decrement(TradeMain.TrailPoints());
+   if (!ValidFieldInput(IntegerToString(target_value))) return;
+   TradeMain.TrailPoints(target_value);
+   trail_field_.Text((string)TradeMain.TrailPoints()); 
 }
 
 //+------------------------------------------------------------------+
@@ -704,17 +711,19 @@ void        CTradeApp::OnStartEditLotsField() {
 }
 
 void        CTradeApp::OnStartEditSLField() {
-   stored_sl_  = StringToDouble(sl_field_.Text()); 
+   stored_sl_  = (int)StringToInteger(sl_field_.Text()); 
 }
 
 void        CTradeApp::OnStartEditTPField() {
-   stored_tp_  = StringToDouble(tp_field_.Text());
+   stored_tp_  = (int)StringToInteger(tp_field_.Text());
 }
 
 void        CTradeApp::OnStartEditBEField() {
-   stored_be_  = StringToDouble(be_field_.Text()); 
+   stored_be_  = (int)StringToInteger(be_field_.Text()); 
 }
-
+void        CTradeApp::OnStartEditTrailField() {
+   stored_trail_  = (int)StringToInteger(trail_field_.Text()); 
+}
 void        CTradeApp::OnEndEditSLField() {
    if (!ValidPointsField(sl_field_, stored_sl_)) return; 
    TradeMain.SLPoints((int)StringToInteger(sl_field_.Text()));
@@ -758,12 +767,12 @@ void        CTradeApp::OnEndEditBEField() {
    
 }
 
-void        CTradeApp::OnStartEditTrailField() {
-   Log_.LogInformation("Function not implemented", __FUNCTION__); 
-}
+
 
 void        CTradeApp::OnEndEditTrailField() {
-   Log_.LogInformation("Function not implemented", __FUNCTION__); 
+   if (!ValidPointsField(trail_field_, stored_trail_)) return;
+   TradeMain.TrailPoints((int)StringToInteger(trail_field_.Text())); 
+   trail_field_.Text((string)TradeMain.TrailPoints()); 
 }
 
 
@@ -789,7 +798,8 @@ void        CTradeApp::OnChangeBECheckbox() {
 }
 
 void        CTradeApp::OnChangeTrailCheckbox() {
-   Log_.LogInformation("Function not implemented", __FUNCTION__); 
+   TradeMain.TrailEnabled(trail_checkbox_.Checked()); 
+   Log_.LogInformation(StringFormat("Trail Enabled: %s", (string)TradeMain.TrailEnabled()), __FUNCTION__); 
 }
 
 
@@ -798,7 +808,7 @@ void        CTradeApp::OnChangeTrailCheckbox() {
 //+------------------------------------------------------------------+
 
 void        CTradeApp::OnClickTrailAllPositions() {
-   Log_.LogInformation("Function not implemented", __FUNCTION__); 
+   TradeMain.TrailAllPositions(); 
 }
 
 void        CTradeApp::OnClickBEAllPositions() {
@@ -953,6 +963,7 @@ void        CTradeApp::UpdateValuesOnTick() {
    ask_label_.Text(UTIL_PRICE_STRING(UTIL_PRICE_ASK())); 
    bid_label_.Text(UTIL_PRICE_STRING(UTIL_PRICE_BID())); 
    TradeMain.BreakevenValidPositions(TradeMain.BEPoints()); 
+   TradeMain.TrailValidPositions(); 
 }
 
 void        CTradeApp::UpdateRiskReward() {
