@@ -64,6 +64,12 @@ public:
    int      BreakevenAllPositions();
    int      BreakevenValidPositions(int points_distance); 
    int      CloseAllPositions(); 
+   
+   
+   int      TrailAllPositions(); 
+   int      TrailValidPositions(); 
+   bool     TrailValid(int ticket); 
+   
 }; 
 
 
@@ -173,9 +179,19 @@ int         CTradeMgr::CloseAllPositions() {
 
 
 int         CTradeMgr::BreakevenValidPositions(int points_distance) {
-   if (!BEEnabled()) return 0; 
-   if (PosTotal() == 0) return 0; 
-   
+   if (!BEEnabled()) {
+      return 0; 
+   }
+   if (TrailEnabled()) {
+      //--- Prioritize trail stop over BE 
+      return 0; 
+   }
+   if (PosTotal() == 0) {
+      Log_.LogInformation("No trades to modify. Order pool is empty.", __FUNCTION__); 
+      return 0; 
+   }
+   Log_.LogInformation(StringFormat("%i trades found. Attempting to set breakeven.", 
+      PosTotal()), __FUNCTION__); 
    double tick_distance = PointsToTicks(points_distance); 
    int num_modified = 0; 
    for (int i = 0; i < PosTotal(); i++) {
@@ -203,4 +219,75 @@ int         CTradeMgr::BreakevenValidPositions(int points_distance) {
    if (num_modified > 0) Log_.LogInformation(StringFormat("%i trades set to breakeven.", num_modified), __FUNCTION__);
    return num_modified; 
 
+}
+
+
+int         CTradeMgr::TrailAllPositions() {
+   /**
+      Trails all positions that are beyond trail threshold
+   **/
+   
+   if (PosTotal() == 0) {
+      //Log_.LogInformation("No trades to modify. Order pool is empty.", __FUNCTION__); 
+      return 0; 
+   } 
+   
+   Log_.LogInformation(StringFormat("%i trades found. Attempting to set trail stop.", 
+      PosTotal()), __FUNCTION__); 
+   
+   double tick_distance = PointsToTicks(trail_points_); 
+   int num_modified = 0; 
+   
+   for (int i = 0; i < PosTotal(); i++) {
+      int s = OP_OrderSelectByIndex(i);
+      //--- Skip trades in floating loss
+      if (PosProfit() < 0) continue; 
+      //--- Skip trades that are below trail threshold
+      if (!TrailValid(PosTicket())) continue; 
+      
+      double sl_price;
+      switch(PosOrderType()) {
+         case ORDER_TYPE_BUY:
+            sl_price = UTIL_PRICE_BID() - tick_distance; 
+            if (sl_price < PosOpenPrice()) continue;
+            break;
+         case ORDER_TYPE_SELL:
+            sl_price = UTIL_PRICE_ASK() + tick_distance;
+            if (sl_price  > PosOpenPrice()) continue;  
+            break; 
+         default:
+            continue; 
+      }
+      if (!OP_ModifySL(PosTicket(), sl_price)) continue; 
+      num_modified++; 
+   }
+   if (num_modified > 0) Log_.LogInformation(StringFormat("%i trades set to breakeven.", num_modified), __FUNCTION__);
+   return num_modified;
+   
+}
+
+int         CTradeMgr::TrailValidPositions() {
+   /**
+      Called On Tick
+   **/
+   if (!TrailEnabled()) return 0; 
+   return TrailAllPositions(); 
+}
+
+
+bool        CTradeMgr::TrailValid(int ticket) {
+   if (ticket != PosTicket()) OP_OrderSelectByTicket(ticket); 
+   if (PosProfit() < 0) return true; 
+   double tick_distance = PointsToTicks(trail_points_); 
+   
+   
+   switch(PosOrderType()) {
+      case ORDER_TYPE_BUY:
+         if (MathAbs(PosOpenPrice() - UTIL_PRICE_BID()) < tick_distance) return false; 
+         return true;       
+      case ORDER_TYPE_SELL: 
+         if (MathAbs(PosOpenPrice() - UTIL_PRICE_ASK()) < tick_distance) return false;
+         return true; 
+   }
+   return false;
 }
