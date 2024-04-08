@@ -74,18 +74,18 @@ public:
 
 
 CTradeMgr::CTradeMgr() 
-   : CTradeOps(Symbol(), 111111)
+   : CTradeOps(Symbol(), InpMagic)
    , lots_(UTIL_SYMBOL_MINLOT())
-   , sl_points_(100)
-   , tp_points_(100)
-   , be_points_(50)
-   , trail_points_(50)
-   , min_points_(50)
-   , step_(10)
-   , sl_enabled_(false)
-   , tp_enabled_(false)
-   , be_enabled_(false)
-   , trail_enabled_(false) {
+   , sl_points_(InpSLPoints)
+   , tp_points_(InpTPPoints)
+   , be_points_(InpBEPoints)
+   , trail_points_(InpTSPoints)
+   , min_points_(InpMinPoints)
+   , step_(InpStep)
+   , sl_enabled_(InpSLEnabled)
+   , tp_enabled_(InpTPEnabled)
+   , be_enabled_(InpBEEnabled)
+   , trail_enabled_(InpTSEnabled) {
    
    CalculateRiskParameters(); 
 }

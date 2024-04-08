@@ -83,6 +83,19 @@ enum ENUM_VALIDATION_ERROR {
    ERR_NEGATIVE_VALUE
 }; 
 
+
+input int                     InpMagic             = 111111; // Magic Number
+input int                     InpSLPoints          = 100; // SL Points 
+input int                     InpTPPoints          = 100; // TP Points 
+input int                     InpBEPoints          = 50; // BE Points 
+input int                     InpTSPoints          = 50; // TS Points
+input int                     InpMinPoints         = 50; // Min Points 
+input int                     InpStep              = 10; // Step 
+input bool                    InpSLEnabled         = false; // SL Enabled 
+input bool                    InpTPEnabled         = false; // TP Enabled
+input bool                    InpBEEnabled         = false; // BE Enabled
+input bool                    InpTSEnabled         = false; // TS Enabled
+
 input bool                    InpTradeOnNews       = false; // TRADE ON NEWS
 input Source                  InpNewsSource        = R4F_WEEKLY; // NEWS SOURCE
 
