@@ -8,7 +8,8 @@ class CNewsEvents{
    protected:
    private:
       datetime    entry_window_open_, entry_window_close_;
-      CLogging    *Log_; 
+      
+      CConsole    *Console_;
    
    public:
       
@@ -50,12 +51,12 @@ class CNewsEvents{
 
 
 CNewsEvents::CNewsEvents(void){
-   Log_ = new CLogging(true, false, false); 
+   Console_ = new CConsole(true, false, false); 
 }
 
 CNewsEvents::~CNewsEvents(void){
    ClearHandle();
-   delete Log_; 
+   delete Console_; 
 }
 
 void        CNewsEvents::UpdateEntryWindow(datetime window_open,datetime window_end){
@@ -99,10 +100,10 @@ int         CNewsEvents::FetchData(void){
 
    //--- Download from internet if file does not exist. 
    if (!FileIsExist(file_path)) {
-      Log_.LogError(StringFormat("File %s not found. Downloading from forex factory.", file_path), __FUNCTION__);
-      if (DownloadNews(file_path, InpNewsSource) == -1) Log_.LogError(StringFormat("Download Failed. Error: %i", GetLastError()), __FUNCTION__);
+      Console_.LogError(StringFormat("File %s not found. Downloading from forex factory.", file_path), __FUNCTION__);
+      if (DownloadNews(file_name, InpNewsSource) == -1) Console_.LogError(StringFormat("Download Failed. Error: %i", GetLastError()), __FUNCTION__);
    }
-   else Log_.LogInformation(StringFormat("File %s found", file_path), __FUNCTION__);
+   else Console_.LogInformation(StringFormat("File %s found", file_path), __FUNCTION__);
    
    
    FILE_HANDLE = FileOpen(file_path, FILE_CSV | FILE_READ | FILE_ANSI, "\n");
@@ -259,7 +260,7 @@ int         CNewsEvents::GetNewsSymbolToday(void){
        if (!SymbolMatch(NEWS_CURRENT[i].country)) continue; 
        
        if (!DateMatch(DateToday(), NEWS_CURRENT[i].time)) continue; 
-       if ((NEWS_CURRENT[i].impact == "Holiday")) AppendToNews(NEWS_CURRENT[i], NEWS_SYMBOL_TODAY); 
+       AppendToNews(NEWS_CURRENT[i], NEWS_SYMBOL_TODAY); 
    }
    return ArraySize(NEWS_SYMBOL_TODAY);
 }
@@ -306,7 +307,8 @@ int         CNewsEvents::AppendToNews(SCalendarEvent &event, SCalendarEvent &new
 
 int         CNewsEvents::DownloadNews(string file_name, Source src) { 
    CCalendarDownload *downloader = new CCalendarDownload(Directory(), 50000);
-   bool success = downloader.Download(file_name, src);
+   
+   bool success = downloader.DownloadFile(file_name, src);
    
    delete downloader;
    if (!success) return -1; 

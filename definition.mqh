@@ -1,13 +1,12 @@
 
-#include <RECURVE/CalendarDownloader.mqh> 
-
+#include <MAIN/CalendarDownloader.mqh>  
+#include <MAIN/logging.mqh> 
 #include <Controls/Defines.mqh> 
 #include <Controls/Dialog.mqh>
 #include <Controls/Button.mqh>
 #include <Controls/Label.mqh>
 #include <Controls/Checkbox.mqh>
 
-#include "logging.mqh"
 #include "trade_ops.mqh"
 
 
@@ -55,7 +54,7 @@
 #define ADJ_BUTTON_SIZE             20
 
 #define CHECKBOX_X_GAP              5
-#define CHECKBOX_Y_GAP              2 
+#define CHECKBOX_Y_GAP              1 
 #define CHECKBOX_WIDTH              40 
 #define CHECKBOX_HEIGHT             18
 
@@ -100,5 +99,5 @@ input bool                    InpTradeOnNews       = false; // TRADE ON NEWS
 input Source                  InpNewsSource        = R4F_WEEKLY; // NEWS SOURCE
 
 
-const string   FXFACTORY_DIRECTORY  = "recurve\\ff_news";
-const string   R4F_DIRECTORY        = "recurve\\r4f_news";
+const string   FXFACTORY_DIRECTORY  = "events\\ff_news";
+const string   R4F_DIRECTORY        = "events\\r4f_news";

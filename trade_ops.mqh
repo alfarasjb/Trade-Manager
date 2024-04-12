@@ -1,7 +1,6 @@
-
-#include <RECURVE/utilities.mqh>
+#include <MAIN/utilities.mqh> 
+#include <MAIN/logging.mqh> 
 #include "pool.mqh"
-#include "logging.mqh"
 
 #ifdef __MQL5__ 
 #include <Trade/Trade.mqh>
@@ -13,7 +12,7 @@ class CTradeOps {
       int         TRADE_MAGIC;
       
    protected:
-      CLogging    *Log_; 
+      CConsole    *Console_; 
                   
    public: 
       CTradeOps(string symbol, int magic); 
@@ -109,14 +108,14 @@ class CTradeOps {
 CTradeOps::CTradeOps(string symbol, int magic) 
    : TRADE_SYMBOL(symbol)
    , TRADE_MAGIC (magic) {
-   Log_ = new CLogging(true, false, false); 
+   Console_ = new CConsole(true, false, false); 
    #ifdef __MQL5__ 
    Trade.SetExpertMagicNumber(TRADE_MAGIC); 
    #endif 
 } 
 
 CTradeOps::~CTradeOps(void) {
-   delete Log_; 
+   delete Console_; 
 }
 
 bool       CTradeOps::OP_CloseTrade(int ticket) {
@@ -142,7 +141,7 @@ bool       CTradeOps::OP_CloseTrade(int ticket) {
          #ifdef __MQL5__ 
          c  = Trade.PositionClose(ticket);
          #endif
-         if (!c) Log_.LogError(StringFormat("Order Close Failed. Ticket: %i, Error: %i", 
+         if (!c) Console_.LogError(StringFormat("Order Close Failed. Ticket: %i, Error: %i", 
             PosTicket(), 
             GetLastError()), __FUNCTION__); 
          break; 
@@ -155,7 +154,7 @@ bool       CTradeOps::OP_CloseTrade(int ticket) {
          #ifdef __MQL5__ 
          c = Trade.OrderDelete(ticket); 
          #endif 
-         if (!c) Log_.LogError(StringFormat("Order Delete Failed. Ticket: %i, Error: %i",
+         if (!c) Console_.LogError(StringFormat("Order Delete Failed. Ticket: %i, Error: %i",
             PosTicket(),
             GetLastError()), __FUNCTION__);
          break; 
@@ -191,7 +190,7 @@ int      CTradeOps::OP_OrderOpen(
             switch(order_type) {
                case ORDER_TYPE_BUY_STOP_LIMIT:
                case ORDER_TYPE_SELL_STOP_LIMIT: 
-                  Log_.LogInformation("Order functions for this order type is not yet implemented.", __FUNCTION__);
+                  Console_.LogInformation("Order functions for this order type is not yet implemented.", __FUNCTION__);
                   return 0;
             }
             result = Trade.OrderOpen(symbol, order_type, NormalizeDouble(volume, 2), 0, price, sl, tp, ORDER_TIME_GTC, expiration, comment); 
@@ -204,7 +203,7 @@ int      CTradeOps::OP_OrderOpen(
       ulong ticket = Trade.ResultDeal(); 
       switch(ret_code == TRADE_RETCODE_DONE) {
          case true:
-            Log_.LogInformation(StringFormat("Order Send Successful. Ticket: %i, Price: %f, Volume: %.2f, SL: %f, TP: %f",
+            Console_.LogInformation(StringFormat("Order Send Successful. Ticket: %i, Price: %f, Volume: %.2f, SL: %f, TP: %f",
                ticket, 
                UTIL_TO_PRICE(Trade.RequestPrice()),
                Trade.RequestVolume(),
@@ -212,7 +211,7 @@ int      CTradeOps::OP_OrderOpen(
                UTIL_TO_PRICE(Trade.RequestTP())), __FUNCTION__); 
             break;
          case false: 
-            Log_.LogError(StringFormat("Position open error. Code: %i", ret_code), __FUNCTION__); 
+            Console_.LogError(StringFormat("Position open error. Code: %i", ret_code), __FUNCTION__); 
             break;
       }
       
@@ -283,7 +282,7 @@ int      CTradeOps::OP_OrdersCloseBatch(int &orders[]) {
    int ticket  = order_pool.Item(0); 
    
    bool c      = OP_CloseTrade(ticket); 
-   if (c)   Log_.LogInformation(StringFormat("Trade Closed. Ticket: %i", ticket), __FUNCTION__); 
+   if (c)   Console_.LogInformation(StringFormat("Trade Closed. Ticket: %i", ticket), __FUNCTION__); 
    int a       = order_pool.Dequeue(); 
    if (a > num_orders) {
       delete order_pool;
@@ -364,6 +363,6 @@ int      CTradeOps::OP_ModifySL(int ticket, double sl) {
    #ifdef __MQL5__ 
    int m = Trade.PositionModify(ticket, sl, PosTP()); 
    #endif 
-   if (!m) Log_.LogError(StringFormat("Order Modify Error. Current SL: %f, Target SL: %f", PosSL(), sl), __FUNCTION__); 
+   if (!m) Console_.LogError(StringFormat("Order Modify Error. Current SL: %f, Target SL: %f", PosSL(), sl), __FUNCTION__); 
    return m; 
 }
