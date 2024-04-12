@@ -948,7 +948,8 @@ bool        CTradeApp::TradingAllowed() {
       return false; 
    }
    if (!MQLInfoInteger(MQL_TRADE_ALLOWED)) {
-      MessageBox(StringFormat("Error. Automated trading is forbidden in the program settings for %s.", WindowExpertName()));
+      MessageBox(StringFormat("Error. Automated trading is forbidden in the program settings for %s.", 
+         MQLInfoString(MQL_PROGRAM_NAME)));
       return false; 
    }
    return true; 

@@ -1,5 +1,5 @@
 #include <MAIN/utilities.mqh> 
-#include <MAIN/logging.mqh> 
+#include <MAIN/console.mqh> 
 #include "pool.mqh"
 
 #ifdef __MQL5__ 

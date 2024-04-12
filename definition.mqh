@@ -1,6 +1,6 @@
 
 #include <MAIN/CalendarDownloader.mqh>  
-#include <MAIN/logging.mqh> 
+#include <MAIN/console.mqh> 
 #include <Controls/Defines.mqh> 
 #include <Controls/Dialog.mqh>
 #include <Controls/Button.mqh>
