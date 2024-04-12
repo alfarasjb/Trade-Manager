@@ -96,7 +96,7 @@ void        CTradeMgr::OrderSendMarketBuy() {
    double sl_price = sl_enabled_ ? UTIL_PRICE_ASK() - PointsToTicks(sl_points_) : 0; 
    double tp_price = tp_enabled_ ? UTIL_PRICE_ASK() + PointsToTicks(tp_points_) : 0; 
    int ticket = OP_OrderOpen(Symbol(), ORDER_TYPE_BUY, Lots(), UTIL_PRICE_ASK(), sl_price, tp_price, "MGR"); 
-   if (!ticket) Log_.LogError("ORDER SEND FAILED.", __FUNCTION__); 
+   if (!ticket) Console_.LogError("ORDER SEND FAILED.", __FUNCTION__); 
    
    
 }
@@ -106,7 +106,7 @@ void        CTradeMgr::OrderSendMarketSell() {
    double tp_price = tp_enabled_ ? UTIL_PRICE_BID() - PointsToTicks(tp_points_) : 0; 
 
    int ticket = OP_OrderOpen(Symbol(), ORDER_TYPE_SELL, Lots(), UTIL_PRICE_BID(), sl_price, tp_price, "MGR"); 
-   if (!ticket) Log_.LogError("ORDER SEND FAILED.", __FUNCTION__); 
+   if (!ticket) Console_.LogError("ORDER SEND FAILED.", __FUNCTION__); 
    
 }
 
@@ -117,7 +117,7 @@ void        CTradeMgr::CalculateRiskParameters() {
    
    risk_usd_         = TicksToUSD(PointsToTicks(sl_points_));
    reward_usd_       = TicksToUSD(PointsToTicks(tp_points_)); 
-   Log_.LogInformation(StringFormat("Risk: %.2f, Reward: %.2f", risk_usd_, reward_usd_), __FUNCTION__);
+   Console_.LogInformation(StringFormat("Risk: %.2f, Reward: %.2f", risk_usd_, reward_usd_), __FUNCTION__);
    
 }
 
@@ -131,11 +131,11 @@ double      CTradeMgr::TicksToUSD(double ticks) {
 
 int         CTradeMgr::BreakevenAllPositions() {
    if (PosTotal() == 0) {
-      Log_.LogInformation("No trades to modify. Order pool is empty.", __FUNCTION__); 
+      Console_.LogInformation("No trades to modify. Order pool is empty.", __FUNCTION__); 
       return 0; 
    }
    
-   Log_.LogInformation(StringFormat("%i trades found. Attempting to set breakeven.", 
+   Console_.LogInformation(StringFormat("%i trades found. Attempting to set breakeven.", 
       PosTotal()), __FUNCTION__);
    int s, ticket, num_modified; 
    
@@ -151,10 +151,10 @@ int         CTradeMgr::BreakevenAllPositions() {
 
 int         CTradeMgr::CloseAllPositions() {
    if (PosTotal() == 0) {
-      Log_.LogInformation("No trades to close. Order Pool is empty.", __FUNCTION__);
+      Console_.LogInformation("No trades to close. Order Pool is empty.", __FUNCTION__);
       return 0; 
    }
-   Log_.LogInformation(StringFormat("%i trades found. Attempting to close.", 
+   Console_.LogInformation(StringFormat("%i trades found. Attempting to close.", 
       PosTotal()), __FUNCTION__); 
       
    CPoolGeneric<int> *tickets = new CPoolGeneric<int>(); 
@@ -170,7 +170,7 @@ int         CTradeMgr::CloseAllPositions() {
    
    OP_OrdersCloseBatch(extracted); 
    
-   if (PosTotal() != 0) Log_.LogInformation(StringFormat("Not all orders were closed. Num Extracted: %i, Remaining: %i", 
+   if (PosTotal() != 0) Console_.LogInformation(StringFormat("Not all orders were closed. Num Extracted: %i, Remaining: %i", 
       num_extracted, 
       PosTotal()), __FUNCTION__); 
    delete tickets; 
@@ -187,10 +187,10 @@ int         CTradeMgr::BreakevenValidPositions(int points_distance) {
       return 0; 
    }
    if (PosTotal() == 0) {
-      Log_.LogInformation("No trades to modify. Order pool is empty.", __FUNCTION__); 
+      Console_.LogInformation("No trades to modify. Order pool is empty.", __FUNCTION__); 
       return 0; 
    }
-   Log_.LogInformation(StringFormat("%i trades found. Attempting to set breakeven.", 
+   Console_.LogInformation(StringFormat("%i trades found. Attempting to set breakeven.", 
       PosTotal()), __FUNCTION__); 
    double tick_distance = PointsToTicks(points_distance); 
    int num_modified = 0; 
@@ -216,7 +216,7 @@ int         CTradeMgr::BreakevenValidPositions(int points_distance) {
       if (!OP_ModifySL(PosTicket(), PosOpenPrice())) continue; 
       num_modified++; 
    }
-   if (num_modified > 0) Log_.LogInformation(StringFormat("%i trades set to breakeven.", num_modified), __FUNCTION__);
+   if (num_modified > 0) Console_.LogInformation(StringFormat("%i trades set to breakeven.", num_modified), __FUNCTION__);
    return num_modified; 
 
 }
@@ -228,11 +228,11 @@ int         CTradeMgr::TrailAllPositions() {
    **/
    
    if (PosTotal() == 0) {
-      //Log_.LogInformation("No trades to modify. Order pool is empty.", __FUNCTION__); 
+      //Console_.LogInformation("No trades to modify. Order pool is empty.", __FUNCTION__); 
       return 0; 
    } 
    
-   Log_.LogInformation(StringFormat("%i trades found. Attempting to set trail stop.", 
+   Console_.LogInformation(StringFormat("%i trades found. Attempting to set trail stop.", 
       PosTotal()), __FUNCTION__); 
    
    double tick_distance = PointsToTicks(trail_points_); 
@@ -261,7 +261,7 @@ int         CTradeMgr::TrailAllPositions() {
       if (!OP_ModifySL(PosTicket(), sl_price)) continue; 
       num_modified++; 
    }
-   if (num_modified > 0) Log_.LogInformation(StringFormat("%i trades set to breakeven.", num_modified), __FUNCTION__);
+   if (num_modified > 0) Console_.LogInformation(StringFormat("%i trades set to breakeven.", num_modified), __FUNCTION__);
    return num_modified;
    
 }

@@ -16,7 +16,7 @@ private:
             
             double      dpi_scale_; 
             CTradeMgr   *TradeMain;
-            CLogging    *Log_;
+            CConsole    *Console_;
             
             //--- Adjustment Buttons
             CButton     market_buy_bt_, market_sell_bt_, increment_lot_bt_, decrement_lot_bt_, increment_sl_bt_, decrement_sl_bt_, increment_tp_bt_, decrement_tp_bt_;
@@ -190,25 +190,25 @@ CTradeApp::CTradeApp(CTradeMgr *trade) : TradeMain(trade) {
    
    //inc_bt_x1_  = PRICE_FIELD_INDENT_LEFT + Scale(PRICE_FIELD_WIDTH); 
    //inc_bt_x2_  = inc_bt_x1_ + Scale(ADJ_BUTTON_SIZE); 
-   inc_bt_x1_  = PRICE_FIELD_INDENT_LEFT + PRICE_FIELD_WIDTH;
+   inc_bt_x1_  = PRICE_FIELD_INDENT_LEFT + Scale(PRICE_FIELD_WIDTH);
    inc_bt_x2_  = inc_bt_x1_ + ADJ_BUTTON_SIZE; 
     
    dec_bt_x1_  = col_1_; //Scale(ADJ_BUTTON_SIZE-2);
    //dec_bt_x2_  = dec_bt_x1_ + Scale(ADJ_BUTTON_SIZE); 
    dec_bt_x2_  = dec_bt_x1_ + ADJ_BUTTON_SIZE; 
-   Log_  = new CLogging(true, false, false);
+   Console_  = new CConsole(true, false, false);
    
    
 }
 
 CTradeApp::~CTradeApp() {
    delete ActiveDialog;
-   delete Log_;
+   delete Console_;
 }
 
 void        CTradeApp::Init() {
    bool c = Create(0, "Trade Manager", 0, MAIN_PANEL_X1, MAIN_PANEL_Y1, MAIN_PANEL_X2, MAIN_PANEL_Y2);
-   if (!c) Log_.LogInformation("Not all objects were created.", __FUNCTION__);
+   if (!c) Console_.LogInformation("Not all objects were created.", __FUNCTION__);
    Run(); 
 }
 
@@ -220,7 +220,6 @@ bool        CTradeApp::Create(
    const int y1,
    const int x2,
    const int y2) {
-   Print("SCALE: ", dpi_scale_); 
    // true val = input / scale
    int scaled_x2  = x1 + Scale(MAIN_PANEL_WIDTH);
    int scaled_y2  = y1 + Scale(MAIN_PANEL_HEIGHT);
@@ -323,8 +322,7 @@ bool        CTradeApp::CreateCheckbox(
    //if (!box.Create(0, name, 0, x1-20, y1, x2, y2)) return false;
    if (!box.Visible(true)) return false; 
    if (!box.Text(text)) return false; 
-   
-   
+   if (!ObjectSetInteger(0, name+"Label", OBJPROP_FONTSIZE, SUBTITLE_FONT_SIZE)) return false; 
    //if (!box.Color(clrGreen)) return false;
    if (!Add(box)) return false; 
    return true;    
@@ -783,23 +781,23 @@ void        CTradeApp::OnEndEditTrailField() {
 
 void        CTradeApp::OnChangeSLCheckbox() {
    TradeMain.SLEnabled(sl_checkbox_.Checked()); 
-   Log_.LogInformation(StringFormat("SL Enabled: %s", (string)TradeMain.SLEnabled()), __FUNCTION__); 
+   Console_.LogInformation(StringFormat("SL Enabled: %s", (string)TradeMain.SLEnabled()), __FUNCTION__); 
 }
 
 void        CTradeApp::OnChangeTPCheckbox() {
    TradeMain.TPEnabled(tp_checkbox_.Checked()); 
-   Log_.LogInformation(StringFormat("TP Enabled: %s", (string)TradeMain.TPEnabled()), __FUNCTION__); 
+   Console_.LogInformation(StringFormat("TP Enabled: %s", (string)TradeMain.TPEnabled()), __FUNCTION__); 
 }
 
 
 void        CTradeApp::OnChangeBECheckbox() {
    TradeMain.BEEnabled(be_checkbox_.Checked());
-   Log_.LogInformation(StringFormat("BE Enabled: %s", (string)TradeMain.BEEnabled()), __FUNCTION__); 
+   Console_.LogInformation(StringFormat("BE Enabled: %s", (string)TradeMain.BEEnabled()), __FUNCTION__); 
 }
 
 void        CTradeApp::OnChangeTrailCheckbox() {
    TradeMain.TrailEnabled(trail_checkbox_.Checked()); 
-   Log_.LogInformation(StringFormat("Trail Enabled: %s", (string)TradeMain.TrailEnabled()), __FUNCTION__); 
+   Console_.LogInformation(StringFormat("Trail Enabled: %s", (string)TradeMain.TrailEnabled()), __FUNCTION__); 
 }
 
 
@@ -827,7 +825,7 @@ void        CTradeApp::OnClickNews() {
    if (PageIsOpen(panel_name) && news.IsVisible()) {
       return; 
    }
-   if (!OpenPage(news)) Log_.LogError(StringFormat("Failed to open panel: %s", panel_name), __FUNCTION__); 
+   if (!OpenPage(news)) Console_.LogError(StringFormat("Failed to open panel: %s", panel_name), __FUNCTION__); 
   
 }
 
@@ -941,7 +939,7 @@ void        CTradeApp::ValidationError(ENUM_VALIDATION_ERROR error,string target
          message  = "Unkown Error."; 
          break; 
    }
-   Log_.LogInformation(StringFormat("Error. %s Source: %s, Value: %s", message, func, target_value), __FUNCTION__); 
+   Console_.LogInformation(StringFormat("Error. %s Source: %s, Value: %s", message, func, target_value), __FUNCTION__); 
 }
 
 bool        CTradeApp::TradingAllowed() {
