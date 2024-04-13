@@ -48,7 +48,7 @@
 
 #define PRICE_FIELD_INDENT_TOP      10 
 //#define PRICE_FIELD_INDENT_LEFT     38  
-#define PRICE_FIELD_INDENT_LEFT     30
+#define PRICE_FIELD_INDENT_LEFT     33 // changed from 30
 #define PRICE_FIELD_HEIGHT          20
 #define PRICE_FIELD_WIDTH           130
 #define ADJ_BUTTON_SIZE             20

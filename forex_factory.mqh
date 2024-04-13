@@ -308,6 +308,7 @@ int         CNewsEvents::AppendToNews(SCalendarEvent &event, SCalendarEvent &new
 int         CNewsEvents::DownloadNews(string file_name, Source src) { 
    CCalendarDownload *downloader = new CCalendarDownload(Directory(), 50000);
    
+   
    bool success = downloader.DownloadFile(file_name, src);
    
    delete downloader;
