@@ -190,7 +190,7 @@ CTradeApp::CTradeApp(CTradeMgr *trade) : TradeMain(trade) {
    
    //inc_bt_x1_  = PRICE_FIELD_INDENT_LEFT + Scale(PRICE_FIELD_WIDTH); 
    //inc_bt_x2_  = inc_bt_x1_ + Scale(ADJ_BUTTON_SIZE); 
-   inc_bt_x1_  = PRICE_FIELD_INDENT_LEFT + Scale(PRICE_FIELD_WIDTH);
+   inc_bt_x1_  = PRICE_FIELD_INDENT_LEFT + PRICE_FIELD_WIDTH;
    inc_bt_x2_  = inc_bt_x1_ + ADJ_BUTTON_SIZE; 
     
    dec_bt_x1_  = col_1_; //Scale(ADJ_BUTTON_SIZE-2);
