@@ -27,7 +27,7 @@
 
 #define     NEWS_PANEL_X1  10 
 #define     NEWS_PANEL_Y1  20 
-#define     NEWS_PANEL_WIDTH 450
+#define     NEWS_PANEL_WIDTH 470
 #define     NEWS_PANEL_HEIGHT 380
 
 #define  CONTROLS_FONT_SIZE      8
@@ -82,7 +82,29 @@ enum ENUM_VALIDATION_ERROR {
    ERR_NEGATIVE_VALUE
 }; 
 
+enum ENUM_COUNTRY_FILTERS {
+   COUNTRY_ALL, // All
+   COUNTRY_SYMBOL // Symbol
+};
+enum ENUM_DATE_FILTERS {
+   DATE_ALL, // All
+   DATE_TODAY // Today
+}; 
+enum ENUM_IMPACT_FILTERS {
+   IMPACT_ALL, // All
+   IMPACT_HIGH, // High
+   IMPACT_MEDIUM, // Medium
+   IMPACT_LOW, // Low
+   IMPACT_NEUTRAL // Neutral 
+};
 
+
+
+
+input ENUM_TIME_CONVERSION    InpTimeMode          = TIME_SERVER; // Time Display Mode
+input ENUM_COUNTRY_FILTERS    InpCountryFilter     = COUNTRY_SYMBOL; // Country Filter 
+input ENUM_DATE_FILTERS       InpDateFilter        = DATE_TODAY; // Date Filter
+input ENUM_IMPACT_FILTERS     InpImpactFilter      = IMPACT_ALL; // Impact Filter
 input int                     InpMagic             = 111111; // Magic Number
 input int                     InpSLPoints          = 100; // SL Points 
 input int                     InpTPPoints          = 100; // TP Points 

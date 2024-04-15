@@ -2,7 +2,7 @@
 
 // TODO
 
-#include "forex_factory.mqh"
+#include "events.mqh"
 
 #include <Controls/Listview.mqh>
 
@@ -23,7 +23,7 @@ public:
             SCalendarEvent Event()           const { return event_; }
             string      EventTitle()         const { return event_.title; }
             string      EventCountry()       const { return event_.country; }
-            string      EventTime()          const { return TimeToString(event_.time, TIME_MINUTES); }
+            string      EventTime()          const { return TimeToString(event_.time); }
             string      EventImpact()        const { return event_.impact; }
             
             //--- Label Names
@@ -74,7 +74,7 @@ private:
             double      dpi_scale_; 
             string      name_; 
             
-            CNewsEvents news_events; 
+            CEvents news_events; 
             
             CNewsObject *news_objects[]; 
             
@@ -84,11 +84,8 @@ private:
             //--- Header Elements 
             CLabel      country_label_, title_label_, time_label_, impact_label_; 
             
-            //--- Sample
-            CLabel      event_country_, event_title_, event_time_, event_impact_; 
-            
-            //--- List
-            CListView   events_list_;
+            //--- Contents
+            ushort      string_max_length_; 
             
             //--- Navigation
             CLabel      page_num_label_;
@@ -133,8 +130,8 @@ public:
             void        OnClickPrevPage(); 
             
          EVENT_MAP_BEGIN(CNewsPanel)
-         ON_EVENT(ON_CLICK, next_page_bt_, OnClickNextPage);
-         ON_EVENT(ON_CLICK, prev_page_bt_, OnClickPrevPage); 
+         ON_NAMED_EVENT(ON_CLICK, next_page_bt_, OnClickNextPage);
+         ON_NAMED_EVENT(ON_CLICK, prev_page_bt_, OnClickPrevPage); 
          EVENT_MAP_END(CAppDialog)
 
 }; 
@@ -146,7 +143,7 @@ CNewsPanel::CNewsPanel() {
    dpi_scale_  = screen_dpi / 96;
    
    int num_news = news_events.FetchData();
-   int num_news_today = news_events.EventsToday(); 
+   int num_query = news_events.Query(InpCountryFilter, InpDateFilter, InpImpactFilter); 
    
    wnd_x1_  = MAIN_PANEL_WIDTH;
    wnd_y1_  = -25; 
@@ -154,20 +151,20 @@ CNewsPanel::CNewsPanel() {
    wnd_y2_  = wnd_y1_ + NEWS_PANEL_HEIGHT; 
    
    col_1_      = 10; 
-   col_2_      = 70; 
-   col_3_      = 320; 
-   col_4_      = 380; 
+   col_2_      = 65; 
+   col_3_      = 290; 
+   col_4_      = 400; 
    
    page_       = 1; 
    page_min_   = 1; 
    num_elements_per_page_  = 13; 
    
-   double max  = (double)num_news_today / (double)num_elements_per_page_; 
+   double max  = (double)num_query / (double)num_elements_per_page_; 
    page_max_   = (int)max < max ? (int)(max)+1 : (int)max; 
    
+   string_max_length_   = 30; 
    
    GenerateNews();
-   
 }
 
 CNewsPanel::~CNewsPanel() {
@@ -182,10 +179,10 @@ void        CNewsPanel::ClearObjects() {
 
 void        CNewsPanel::GenerateNews() {
    //--- CORRECT PROCEDURE 
-   int num_news = ArraySize(news_events.NEWS_TODAY); 
+   int num_news = ArraySize(news_events.events_target_); 
    ArrayResize(news_objects, num_news); 
    for (int i = 0; i < num_news; i++) {
-      CNewsObject *obj = new CNewsObject(news_events.NEWS_TODAY[i], i); 
+      CNewsObject *obj = new CNewsObject(news_events.events_target_[i], i); 
       news_objects[i] = obj; 
     }
 }
@@ -217,7 +214,7 @@ bool        CNewsPanel::CreateNavigation() {
    if (!prev_page_bt_.Text("Prev Page")) return false; 
    if (!Add(prev_page_bt_)) return false; 
    
-   if (!CreatePageLabel(1)) return false; 
+   if (!CreatePageLabel(Page())) return false; 
    if (!CreateRow()) return false; 
    return true; 
 }
@@ -244,21 +241,19 @@ bool        CNewsPanel::CreateRow() {
    int size = ArraySize(page_info_);
    for (int i = 0; i < size; i++) {
       CNewsObject *obj = page_info_[i];
-      Print(obj.CountryLabelName()); 
       obj.ClearLabel(); 
       
    }
    
    ArrayFree(page_info_);
    //ArrayResize(page_info_, num_elements_per_page_); 
-   
    for (int i = starting_index; i < ending_index; i++) {
       if (i >= ArraySize(news_objects)) break; 
       CNewsObject *obj = news_objects[i]; 
       //if (!CreateLabel(obj.country_label_, obj.EventCountry(), country_x1, i+2)) return false; 
       int row = (i-((page-1)*num_elements_per_page_))+2; 
       if (!CreateNewsLabel(obj.country_label_, obj.CountryLabelName(), obj.EventCountry(), country_x1, row)) return false; 
-      if (!CreateNewsLabel(obj.title_label_, obj.TitleLabelName(), obj.EventTitle(), title_x1, row)) return false; 
+      if (!CreateNewsLabel(obj.title_label_, obj.TitleLabelName(), StringSubstr(obj.EventTitle(), 0, string_max_length_), title_x1, row)) return false; 
       if (!CreateNewsLabel(obj.time_label_, obj.TimeLabelName(), obj.EventTime(), time_x1, row)) return false; 
       if (!CreateNewsLabel(obj.impact_label_, obj.ImpactLabelName(), obj.EventImpact(), impact_x1, row)) return false;
       
