@@ -27,7 +27,7 @@
 
 #define     NEWS_PANEL_X1  10 
 #define     NEWS_PANEL_Y1  20 
-#define     NEWS_PANEL_WIDTH 300
+#define     NEWS_PANEL_WIDTH 450
 #define     NEWS_PANEL_HEIGHT 380
 
 #define  CONTROLS_FONT_SIZE      8

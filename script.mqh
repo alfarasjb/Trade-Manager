@@ -49,6 +49,10 @@ void OnChartEvent(
    const double& dparam, 
    const string& sparam
 ) {
+   if (app.ActiveName() == News.NAME()) {
+      News.ChartEvent(id,lparam,dparam,sparam);
+      return; 
+   }
    CAppDialog *actv  = (CAppDialog*)app.Actv(); 
    app.ChartEvent(id,lparam,dparam,sparam); 
    
