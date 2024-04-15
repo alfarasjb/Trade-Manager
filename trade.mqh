@@ -137,7 +137,7 @@ int         CTradeMgr::BreakevenAllPositions() {
    
    Console_.LogInformation(StringFormat("%i trades found. Attempting to set breakeven.", 
       PosTotal()), __FUNCTION__);
-   int s, ticket, num_modified; 
+   int s, ticket, num_modified=0; 
    
    for (int i = 0; i < PosTotal(); i++) {
       s  = OP_OrderSelectByIndex(i);
@@ -200,7 +200,7 @@ int         CTradeMgr::BreakevenValidPositions(int points_distance) {
       if (PosProfit() < 0) continue; 
       //--- Skip trades already set to BE 
       if (PosOpenPrice() == PosSL()) continue; 
-      double tick_diff; 
+      double tick_diff=0; 
       switch(PosOrderType()) {
          case ORDER_TYPE_BUY:
             tick_diff = MathAbs(PosOpenPrice() - UTIL_PRICE_BID()); 

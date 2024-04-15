@@ -6,7 +6,12 @@
 
 #include <Controls/Listview.mqh>
 
+
+
 class CNewsObject : public CAppDialog {
+/*
+   Used to hold information on a news event, and their labels 
+*/
 private:
    SCalendarEvent    event_; 
    int               id_; 
@@ -19,7 +24,6 @@ public:
    ~CNewsObject(); 
             
             CLabel      country_label_, title_label_, time_label_, impact_label_;  
-            //CLabel*     CountryLabel()    const { return GetPointer(country_label_); }
             SCalendarEvent Event()           const { return event_; }
             string      EventTitle()         const { return event_.title; }
             string      EventCountry()       const { return event_.country; }
@@ -37,11 +41,6 @@ public:
             bool        ClearLabel(); 
             
 }; 
-/*
-CNewsObject::CNewsObject(SCalendarEvent &event) {
-   event_ = event; 
-}
-*/
 
 CNewsObject::CNewsObject(SCalendarEvent &event,const int id) {
    event_ = event; 
@@ -82,7 +81,8 @@ private:
             int         col_1_, col_2_, col_3_, col_4_; 
             
             //--- Header Elements 
-            CLabel      country_label_, title_label_, time_label_, impact_label_; 
+            //CLabel      country_label_, title_label_, time_label_, impact_label_; 
+            CLabel      country_header_, title_header_, time_header_, impact_header_; 
             
             //--- Contents
             ushort      string_max_length_; 
@@ -100,29 +100,24 @@ private:
             bool        CreateNavigation(); 
             bool        CreatePageLabel(const int page); 
             
-public:
-   CNewsPanel(); 
-   ~CNewsPanel(); 
-            
+            bool        ClearExistingLabels(); 
+            int         AddPageInfo(CNewsObject *obj);
             
             int         Col1()   const    { return col_1_; }
             int         Col2()   const    { return col_2_; }
             int         Col3()   const    { return col_3_; }
             int         Col4()   const    { return col_4_; }
             
-            string      NAME() const { return name_; }
             int         Scale(double value)     { return (int)MathRound(value * dpi_scale_); }
    
             ushort      Page()   const    { return page_; }
             void        Page(int pg)      { page_ = (ushort)MathAbs(pg); }           
    
-   virtual  bool        Create(); 
    virtual  bool        CreateRow(); 
    virtual  void        OnClickButtonMinMax(); 
    virtual  void        OnClickButtonClose(); 
    
             void        GenerateNews(); 
-            void        ClearObjects(); 
 
 
       //--- EVENT HANDLERS
@@ -133,18 +128,25 @@ public:
          ON_NAMED_EVENT(ON_CLICK, next_page_bt_, OnClickNextPage);
          ON_NAMED_EVENT(ON_CLICK, prev_page_bt_, OnClickPrevPage); 
          EVENT_MAP_END(CAppDialog)
-
+     
+public:
+   CNewsPanel(); 
+   ~CNewsPanel(); 
+            
+   virtual  bool        Create(); 
+            string      NAME() const { return name_; }            
+            void        InitializeEvents();             
+            void        ClearObjects(); 
+            bool        PageButtonPressed(const string sparam); 
 }; 
 
 
 CNewsPanel::CNewsPanel() {
+   Print(__FUNCTION__, " Constructor Called"); 
    name_ = "news";
    double screen_dpi = (double)TerminalInfoInteger(TERMINAL_SCREEN_DPI);
    dpi_scale_  = screen_dpi / 96;
-   
-   int num_news = news_events.FetchData();
-   int num_query = news_events.Query(InpCountryFilter, InpDateFilter, InpImpactFilter); 
-   
+      
    wnd_x1_  = MAIN_PANEL_WIDTH;
    wnd_y1_  = -25; 
    wnd_x2_  = wnd_x1_ + NEWS_PANEL_WIDTH; 
@@ -159,15 +161,15 @@ CNewsPanel::CNewsPanel() {
    page_min_   = 1; 
    num_elements_per_page_  = 13; 
    
-   double max  = (double)num_query / (double)num_elements_per_page_; 
-   page_max_   = (int)max < max ? (int)(max)+1 : (int)max; 
-   
    string_max_length_   = 30; 
    
-   GenerateNews();
+   InitializeEvents(); 
+   
 }
 
+
 CNewsPanel::~CNewsPanel() {
+   Print(__FUNCTION__, ": Destructor Called"); 
    ClearObjects(); 
 
 }
@@ -177,12 +179,25 @@ void        CNewsPanel::ClearObjects() {
    for (int i = 0; i < size; i++) delete news_objects[i]; 
 }
 
+void        CNewsPanel::InitializeEvents() {
+   news_events.Initialize();
+   double num_news   = (double)news_events.FetchData();
+   double num_query  = (double)news_events.Query(InpCountryFilter, InpDateFilter, InpImpactFilter); 
+   
+   double max        = num_query / num_elements_per_page_; 
+   page_max_         = (int)max < max ? (int)(max)+1 : (int)max;
+   
+   GenerateNews(); 
+   
+}
+
 void        CNewsPanel::GenerateNews() {
    //--- CORRECT PROCEDURE 
-   int num_news = ArraySize(news_events.events_target_); 
+   ClearObjects(); 
+   int num_news   = news_events.NumTargetEvents(); 
    ArrayResize(news_objects, num_news); 
-   for (int i = 0; i < num_news; i++) {
-      CNewsObject *obj = new CNewsObject(news_events.events_target_[i], i); 
+   for (int i = 0; i < num_news; i++) { 
+      CNewsObject *obj  = new CNewsObject(news_events.EventTarget(i), i); 
       news_objects[i] = obj; 
     }
 }
@@ -238,33 +253,52 @@ bool        CNewsPanel::CreateRow() {
    int starting_index   = ((page-1) * num_elements_per_page_); 
    int ending_index     = starting_index + num_elements_per_page_; 
    
-   int size = ArraySize(page_info_);
-   for (int i = 0; i < size; i++) {
-      CNewsObject *obj = page_info_[i];
-      obj.ClearLabel(); 
-      
-   }
+   //--- This block clears existing labels 
    
-   ArrayFree(page_info_);
-   //ArrayResize(page_info_, num_elements_per_page_); 
+   ClearExistingLabels(); 
+   
    for (int i = starting_index; i < ending_index; i++) {
+      //--- Index Exceeds available objects 
       if (i >= ArraySize(news_objects)) break; 
+      
       CNewsObject *obj = news_objects[i]; 
-      //if (!CreateLabel(obj.country_label_, obj.EventCountry(), country_x1, i+2)) return false; 
+      
       int row = (i-((page-1)*num_elements_per_page_))+2; 
       if (!CreateNewsLabel(obj.country_label_, obj.CountryLabelName(), obj.EventCountry(), country_x1, row)) return false; 
       if (!CreateNewsLabel(obj.title_label_, obj.TitleLabelName(), StringSubstr(obj.EventTitle(), 0, string_max_length_), title_x1, row)) return false; 
       if (!CreateNewsLabel(obj.time_label_, obj.TimeLabelName(), obj.EventTime(), time_x1, row)) return false; 
       if (!CreateNewsLabel(obj.impact_label_, obj.ImpactLabelName(), obj.EventImpact(), impact_x1, row)) return false;
       
-      size = ArraySize(page_info_);
-      ArrayResize(page_info_, size+1); 
-      page_info_[size] = obj;  
+      AddPageInfo(obj); 
       
    }
-   Print("Page Info Size: ", ArraySize(page_info_));
    
-   
+   return true; 
+}
+
+int         CNewsPanel::AddPageInfo(CNewsObject *obj) {
+   /*
+      Adds to array of visible objects 
+   */
+   int size = ArraySize(page_info_); 
+   ArrayResize(page_info_, size+1);
+   page_info_[size] = obj; 
+   return ArraySize(page_info_); 
+}
+
+bool        CNewsPanel::ClearExistingLabels() {
+   /*
+      Deletes labels of existing objects. 
+      
+      Called when page is changed
+   */
+   int size = ArraySize(page_info_);
+   for (int i = 0; i < size; i++) {
+      CNewsObject *obj     = page_info_[i];
+      if (CheckPointer(obj) == POINTER_INVALID) continue;
+      obj.ClearLabel(); 
+   }
+   ArrayFree(page_info_); 
    return true; 
 }
 
@@ -290,7 +324,6 @@ bool        CNewsPanel::CreateLabel(CLabel &lbl, string name, int x, int row) {
    int y2   = y1 + 20; 
    
    string label_name = name+"label"; 
-   Print("LABEL: ", label_name); 
    
    if (!lbl.Create(0, label_name, 0, x, y1, x2, y2)) return false; 
    if (!lbl.Text(name)) return false; 
@@ -303,10 +336,10 @@ bool        CNewsPanel::CreateHeader() {
    int y1   = Scale(NEWS_PANEL_Y1 + 100); 
    int x2   = Scale(x1 + 50);
    int y2   = Scale(y1 +50);
-   if (!CreateLabel(country_label_, "Country", Col1(), 1)) return false; 
-   if (!CreateLabel(title_label_, "Title", Col2(), 1)) return false; 
-   if (!CreateLabel(time_label_, "Time", Col3(), 1)) return false; 
-   if (!CreateLabel(impact_label_, "Impact", Col4(), 1)) return false; 
+   if (!CreateLabel(country_header_, "Country", Col1(), 1)) return false; 
+   if (!CreateLabel(title_header_, "Title", Col2(), 1)) return false; 
+   if (!CreateLabel(time_header_, "Time", Col3(), 1)) return false; 
+   if (!CreateLabel(impact_header_, "Impact", Col4(), 1)) return false; 
    return true; 
 }
 
@@ -325,7 +358,6 @@ void        CNewsPanel::OnClickNextPage() {
    int pg   = Page()+1; 
    Page(pg); 
    page_num_label_.Text((string)Page()); 
-   Print("Page Increment: ", Page()); 
    CreateRow();
 }
 
@@ -334,6 +366,11 @@ void        CNewsPanel::OnClickPrevPage() {
    int pg   = Page()-1; 
    Page(pg);
    page_num_label_.Text((string)Page()); 
-   Print("Page Decrement: ", Page()); 
    CreateRow();
+}
+
+bool        CNewsPanel::PageButtonPressed(const string sparam) {
+   if (sparam == next_page_bt_.Name()) return true;
+   if (sparam == prev_page_bt_.Name()) return true;
+   return false; 
 }

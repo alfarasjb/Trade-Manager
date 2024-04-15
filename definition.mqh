@@ -117,9 +117,6 @@ input bool                    InpTPEnabled         = false; // TP Enabled
 input bool                    InpBEEnabled         = false; // BE Enabled
 input bool                    InpTSEnabled         = false; // TS Enabled
 
-input bool                    InpTradeOnNews       = false; // TRADE ON NEWS
-input Source                  InpNewsSource        = R4F_WEEKLY; // NEWS SOURCE
-
 
 const string   FXFACTORY_DIRECTORY  = "events\\ff_news";
 const string   R4F_DIRECTORY        = "events\\r4f_news";
