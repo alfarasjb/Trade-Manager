@@ -47,6 +47,11 @@ class CNewsEvents{
       int         ParseFXFactoryData(int handle);
       int         ParseR4FData(int handle);
       string      ParseImpact(string impact);
+      
+      
+      //--- MAIN FUNCTIONALITY 
+      int         EventsToday(); 
+      
 };
 
 
@@ -239,6 +244,7 @@ datetime       CNewsEvents::ParseDates(string date, string time){
    return final_dt;
 }
 
+
 int         CNewsEvents::GetNewsSymbolToday(void){
    /**
       Iterates through main dataset and identify symbol and date. 
@@ -263,6 +269,18 @@ int         CNewsEvents::GetNewsSymbolToday(void){
        AppendToNews(NEWS_CURRENT[i], NEWS_SYMBOL_TODAY); 
    }
    return ArraySize(NEWS_SYMBOL_TODAY);
+}
+
+int         CNewsEvents::EventsToday() {
+   
+   ClearArray(NEWS_TODAY);
+   int size = NumNews(); 
+   
+   for (int i = 0; i < size; i++) {
+      if (!DateMatch(DateToday(), NEWS_CURRENT[i].time)) continue; 
+      AppendToNews(NEWS_CURRENT[i], NEWS_TODAY); 
+   }
+   return ArraySize(NEWS_TODAY); 
 }
 
 bool        CNewsEvents::HighImpactNewsToday(void) {

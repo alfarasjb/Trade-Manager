@@ -823,6 +823,7 @@ void        CTradeApp::OnClickNews() {
    CNewsPanel  *news    = (CNewsPanel*)GetPointer(News); 
    string   panel_name  = news.NAME(); 
    if (PageIsOpen(panel_name) && news.IsVisible()) {
+      CloseActiveWindow(); 
       return; 
    }
    if (!OpenPage(news)) Console_.LogError(StringFormat("Failed to open panel: %s", panel_name), __FUNCTION__); 
@@ -841,11 +842,8 @@ bool        CTradeApp::PageIsOpen(string panel_name) {
    if (CheckPointer(ActiveDialog) != POINTER_INVALID) {
       ActiveDialog.Destroy(1); 
    }
-   if (name == panel_name) {
-      CloseActiveWindow(); 
-      return true; 
-   }
-   return false; 
+   
+   return name == panel_name; 
 }
 
 template <typename T>

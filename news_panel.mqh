@@ -1,4 +1,4 @@
-
+//--- UNDER CONSTRUCTION 
 
 // TODO
 
@@ -9,24 +9,59 @@
 class CNewsObject : public CAppDialog {
 private:
    SCalendarEvent    event_; 
+   int               id_; 
+   
+   //--- Label Names 
+   string            country_label_name_, title_label_name_, time_label_name_, impact_label_name_; 
+   
 public:
-   CNewsObject(SCalendarEvent &event); 
+   CNewsObject(SCalendarEvent &event, const int id); 
    ~CNewsObject(); 
             
             CLabel      country_label_, title_label_, time_label_, impact_label_;  
             //CLabel*     CountryLabel()    const { return GetPointer(country_label_); }
-            SCalendarEvent Event()        const { return event_; }
-            string      EventTitle()     const { return event_.title; }
+            SCalendarEvent Event()           const { return event_; }
+            string      EventTitle()         const { return event_.title; }
+            string      EventCountry()       const { return event_.country; }
+            string      EventTime()          const { return TimeToString(event_.time, TIME_MINUTES); }
+            string      EventImpact()        const { return event_.impact; }
+            
+            //--- Label Names
+            string      CountryLabelName()   const { return country_label_name_; }
+            string      TitleLabelName()     const { return title_label_name_; }
+            string      TimeLabelName()      const { return time_label_name_; }
+            string      ImpactLabelName()    const { return impact_label_name_; }
+            
             
             bool        Create(int col1, int col2, int col3, int col4); 
+            bool        ClearLabel(); 
             
 }; 
-
+/*
 CNewsObject::CNewsObject(SCalendarEvent &event) {
    event_ = event; 
 }
+*/
+
+CNewsObject::CNewsObject(SCalendarEvent &event,const int id) {
+   event_ = event; 
+   id_ = id; 
+   
+   country_label_name_  = StringFormat("%i_%s", id_, event_.country); 
+   title_label_name_    = StringFormat("%i_%s", id_, event_.title);
+   time_label_name_     = StringFormat("%i_%s", id_, event_.time); 
+   impact_label_name_   = StringFormat("%i_%s", id_, event_.impact); 
+}
 
 CNewsObject::~CNewsObject() {
+}
+
+bool     CNewsObject::ClearLabel() {
+   country_label_.Destroy(1); 
+   title_label_.Destroy(1);
+   time_label_.Destroy(1);
+   impact_label_.Destroy(1);
+   return true;    
 }
 
 class CNewsPanel : public CAppDialog {
@@ -55,9 +90,19 @@ private:
             //--- List
             CListView   events_list_;
             
+            //--- Navigation
+            CLabel      page_num_label_;
+            CButton     next_page_bt_, prev_page_bt_; 
+            ushort      page_, page_max_, page_min_, num_elements_per_page_; 
+            
+            CNewsObject *page_info_[]; 
+            
             bool        CreateHeader(); 
             bool        CreateLabel(CLabel &lbl, string name, int x, int row); 
-   
+            bool        CreateNewsLabel(CLabel &lbl, string name, string text, int x, int row); 
+            bool        CreateNavigation(); 
+            bool        CreatePageLabel(const int page); 
+            
 public:
    CNewsPanel(); 
    ~CNewsPanel(); 
@@ -71,6 +116,9 @@ public:
             string      NAME() const { return name_; }
             int         Scale(double value)     { return (int)MathRound(value * dpi_scale_); }
    
+            ushort      Page()   const    { return page_; }
+            void        Page(int pg)      { page_ = (ushort)MathAbs(pg); }           
+   
    virtual  bool        Create(); 
    virtual  bool        CreateRow(); 
    virtual  void        OnClickButtonMinMax(); 
@@ -78,7 +126,16 @@ public:
    
             void        GenerateNews(); 
             void        ClearObjects(); 
-            bool        CreateList(); 
+
+
+      //--- EVENT HANDLERS
+            void        OnClickNextPage();
+            void        OnClickPrevPage(); 
+            
+         EVENT_MAP_BEGIN(CNewsPanel)
+         ON_EVENT(ON_CLICK, next_page_bt_, OnClickNextPage);
+         ON_EVENT(ON_CLICK, prev_page_bt_, OnClickPrevPage); 
+         EVENT_MAP_END(CAppDialog)
 
 }; 
 
@@ -89,6 +146,7 @@ CNewsPanel::CNewsPanel() {
    dpi_scale_  = screen_dpi / 96;
    
    int num_news = news_events.FetchData();
+   int num_news_today = news_events.EventsToday(); 
    
    wnd_x1_  = MAIN_PANEL_WIDTH;
    wnd_y1_  = -25; 
@@ -99,6 +157,14 @@ CNewsPanel::CNewsPanel() {
    col_2_      = 70; 
    col_3_      = 320; 
    col_4_      = 380; 
+   
+   page_       = 1; 
+   page_min_   = 1; 
+   num_elements_per_page_  = 13; 
+   
+   double max  = (double)num_news_today / (double)num_elements_per_page_; 
+   page_max_   = (int)max < max ? (int)(max)+1 : (int)max; 
+   
    
    GenerateNews();
    
@@ -115,54 +181,108 @@ void        CNewsPanel::ClearObjects() {
 }
 
 void        CNewsPanel::GenerateNews() {
-   //-- don't forget to delete the objects 
-   CNewsObject *news_obj   = new CNewsObject(news_events.NEWS_CURRENT[0]); 
-   
-   int size=ArraySize(news_objects); 
-   ArrayResize(news_objects, size+1); 
-   news_objects[size] = news_obj; 
-   
-   CNewsObject *test_obj = news_objects[0]; 
-   Print("TEST: ", test_obj.EventTitle()); 
+   //--- CORRECT PROCEDURE 
+   int num_news = ArraySize(news_events.NEWS_TODAY); 
+   ArrayResize(news_objects, num_news); 
+   for (int i = 0; i < num_news; i++) {
+      CNewsObject *obj = new CNewsObject(news_events.NEWS_TODAY[i], i); 
+      news_objects[i] = obj; 
+    }
 }
-
-bool        CNewsPanel::CreateList() {
-   if (!events_list_.Create(0, "events_list", 0, 0, 30, NEWS_PANEL_WIDTH-5, NEWS_PANEL_HEIGHT-25)) return false; 
-   events_list_.VScrolled(true); 
-   events_list_.ItemAdd("HELLO"); 
-   if (!Add(events_list_)) return false; 
-   return true; 
-}
-
 
 bool        CNewsPanel::Create() {
    if (!CAppDialog::Create(0, name_, 0, wnd_x1_, wnd_y1_, Scale(wnd_x2_), Scale(wnd_y2_))) return false; 
    if (!CreateHeader()) return false; 
-   //if (!CreateRow()) return false; 
-   //CNewsObject *obj = new CNewsObject(news_events.NEWS_SYMBOL_TODAY[0]); 
-   if (!CreateList()) return false; 
+   //--- CREATE PAGE BUTTONS 
+   if (!CreateNavigation()) return false; 
+   
    CAppDialog::Maximize(); 
    
    return true;
 }
 
 
+bool        CNewsPanel::CreateNavigation() {
+
+   const int bt_height  = 30;
+   const int bt_width   = 100; 
+   const int bt_y1      = 310; 
+   const int bt_y2      = bt_y1 + bt_height; 
+   
+   if (!next_page_bt_.Create(0, "Next Page", 0, Col3(), bt_y1, Col3() + bt_width, bt_y2)) return false; 
+   if (!next_page_bt_.Text("Next Page")) return false; 
+   if (!Add(next_page_bt_)) return false; 
+   
+   if (!prev_page_bt_.Create(0, "Prev Page", 0, Col1(), bt_y1, Col1() + bt_width, bt_y2)) return false;
+   if (!prev_page_bt_.Text("Prev Page")) return false; 
+   if (!Add(prev_page_bt_)) return false; 
+   
+   if (!CreatePageLabel(1)) return false; 
+   if (!CreateRow()) return false; 
+   return true; 
+}
+
+bool        CNewsPanel::CreatePageLabel(const int page) {
+   if (!page_num_label_.Create(0, "Page", 0, Col2() + 150, 315, Col3() - 20, 340)) return false; 
+   if (!page_num_label_.Text((string)page)) return false; 
+   if (!Add(page_num_label_)) return false; 
+   return true; 
+}
+
 bool        CNewsPanel::CreateRow() {
-   int row = 1; 
+   //int row = 1; 
    
    int country_x1 = Col1() + 5; 
    int title_x1   = Col2(); 
    int time_x1    = Col3(); 
    int impact_x1  = Col4() + 5; 
    
-   CNewsObject *test = news_objects[0]; 
-   SCalendarEvent event = test.Event(); 
+   int page = Page(); 
+   int starting_index   = ((page-1) * num_elements_per_page_); 
+   int ending_index     = starting_index + num_elements_per_page_; 
+   
+   int size = ArraySize(page_info_);
+   for (int i = 0; i < size; i++) {
+      CNewsObject *obj = page_info_[i];
+      Print(obj.CountryLabelName()); 
+      obj.ClearLabel(); 
+      
+   }
+   
+   ArrayFree(page_info_);
+   //ArrayResize(page_info_, num_elements_per_page_); 
+   
+   for (int i = starting_index; i < ending_index; i++) {
+      if (i >= ArraySize(news_objects)) break; 
+      CNewsObject *obj = news_objects[i]; 
+      //if (!CreateLabel(obj.country_label_, obj.EventCountry(), country_x1, i+2)) return false; 
+      int row = (i-((page-1)*num_elements_per_page_))+2; 
+      if (!CreateNewsLabel(obj.country_label_, obj.CountryLabelName(), obj.EventCountry(), country_x1, row)) return false; 
+      if (!CreateNewsLabel(obj.title_label_, obj.TitleLabelName(), obj.EventTitle(), title_x1, row)) return false; 
+      if (!CreateNewsLabel(obj.time_label_, obj.TimeLabelName(), obj.EventTime(), time_x1, row)) return false; 
+      if (!CreateNewsLabel(obj.impact_label_, obj.ImpactLabelName(), obj.EventImpact(), impact_x1, row)) return false;
+      
+      size = ArraySize(page_info_);
+      ArrayResize(page_info_, size+1); 
+      page_info_[size] = obj;  
+      
+   }
+   Print("Page Info Size: ", ArraySize(page_info_));
    
    
-   if (!CreateLabel(test.country_label_, event.country, country_x1, 2)) return false; 
-   if (!CreateLabel(test.title_label_, event.title, title_x1, 2)) return false;
-   if (!CreateLabel(test.time_label_, TimeToString(event.time, TIME_MINUTES), time_x1, 2)) return false; 
-   if (!CreateLabel(test.impact_label_, event.impact, impact_x1, 2)) return false; 
+   return true; 
+}
+
+bool        CNewsPanel::CreateNewsLabel(CLabel &lbl,string name,string text,int x,int row) {
+   int y_offset = (20 * (row - 1));
+   
+   int y1      = 10 + y_offset;
+   int x2      = x + 50; 
+   int y2      = y1 + 20; 
+   
+   if (!lbl.Create(0, name, 0, x, y1, x2, y2)) return false;
+   if (!lbl.Text(text)) return false; 
+   if (!Add(lbl)) return false; 
    return true; 
 }
 
@@ -174,7 +294,10 @@ bool        CNewsPanel::CreateLabel(CLabel &lbl, string name, int x, int row) {
    int x2   = x + 50; 
    int y2   = y1 + 20; 
    
-   if (!lbl.Create(0, name+"label", 0, x, y1, x2, y2)) return false; 
+   string label_name = name+"label"; 
+   Print("LABEL: ", label_name); 
+   
+   if (!lbl.Create(0, label_name, 0, x, y1, x2, y2)) return false; 
    if (!lbl.Text(name)) return false; 
    if (!Add(lbl)) return false;  
    return true; 
@@ -192,9 +315,30 @@ bool        CNewsPanel::CreateHeader() {
    return true; 
 }
 
+
+
+//--- EVENTS
 void        CNewsPanel::OnClickButtonMinMax() {
    Visible(false); 
    
 }
 
 void        CNewsPanel::OnClickButtonClose() {}
+
+void        CNewsPanel::OnClickNextPage() {
+   if (Page() >= page_max_) return; 
+   int pg   = Page()+1; 
+   Page(pg); 
+   page_num_label_.Text((string)Page()); 
+   Print("Page Increment: ", Page()); 
+   CreateRow();
+}
+
+void        CNewsPanel::OnClickPrevPage() {
+   if (Page() <= page_min_) return; 
+   int pg   = Page()-1; 
+   Page(pg);
+   page_num_label_.Text((string)Page()); 
+   Print("Page Decrement: ", Page()); 
+   CreateRow();
+}
