@@ -13,6 +13,8 @@ CNewsPanel  News;
 class CTradeApp : public CAppDialog {
 protected:
 private:
+            //--- News Window
+            bool        news_open_; 
             
             double      dpi_scale_; 
             CTradeMgr   *TradeMain;
@@ -177,6 +179,10 @@ public:
             void     CloseActiveWindow(); 
             
             template <typename T>   bool  OpenPage(T &page); 
+            
+   //--- WRAPPERS
+            void     NewsWindowOpen(bool value)    { news_open_ = value; }
+            bool     NewsWindowOpen()  const       { return news_open_; }
 }; 
 
 CTradeApp::CTradeApp(CTradeMgr *trade) : TradeMain(trade) {
@@ -197,6 +203,8 @@ CTradeApp::CTradeApp(CTradeMgr *trade) : TradeMain(trade) {
    //dec_bt_x2_  = dec_bt_x1_ + Scale(ADJ_BUTTON_SIZE); 
    dec_bt_x2_  = dec_bt_x1_ + ADJ_BUTTON_SIZE; 
    Console_  = new CConsole(true, false, false);
+   
+   news_open_ = false;
    
    
 }
@@ -823,6 +831,7 @@ void        CTradeApp::OnClickNews() {
    CNewsPanel  *news    = (CNewsPanel*)GetPointer(News); 
    string   panel_name  = news.NAME(); 
    if (PageIsOpen(panel_name) && news.IsVisible()) {
+      CloseActiveWindow(); 
       return; 
    }
    if (!OpenPage(news)) Console_.LogError(StringFormat("Failed to open panel: %s", panel_name), __FUNCTION__); 
@@ -834,7 +843,7 @@ string      CTradeApp::ActiveName() {
    CAppDialog *d  = (CAppDialog*)GetPointer(ActiveDialog); 
    return d.Caption(); 
 }
-
+/*
 bool        CTradeApp::PageIsOpen(string panel_name) {
    string name = ActiveName(); 
    
@@ -843,8 +852,14 @@ bool        CTradeApp::PageIsOpen(string panel_name) {
    }
    CloseActiveWindow(); 
    
+   
    return name == panel_name; 
+}*/ 
+
+bool        CTradeApp::PageIsOpen(string panel_name) {
+   return panel_name == ActiveName(); 
 }
+
 
 template <typename T>
 bool        CTradeApp::OpenPage(T &Page) {
@@ -858,7 +873,10 @@ bool        CTradeApp::OpenPage(T &Page) {
 }
 
 void        CTradeApp::CloseActiveWindow() { 
-   CAppDialog *pt = (CAppDialog*)GetPointer(ActiveDialog);
+   if (CheckPointer(ActiveDialog) != POINTER_INVALID) {
+      ActiveDialog.Destroy(1); 
+   }
+   
    delete ActiveDialog; 
 }
 
