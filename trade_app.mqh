@@ -851,7 +851,9 @@ bool        CTradeApp::PageIsOpen(string panel_name) {
 template <typename T>
 bool        CTradeApp::OpenPage(T &Page) {
    if (!Page.Create()) return false; 
+   if (!Add(Page)) return false; 
    Page.Run();
+   
    ActiveDialog   = Page;
    ActiveDialog.Visible(true);  
    return true; 
