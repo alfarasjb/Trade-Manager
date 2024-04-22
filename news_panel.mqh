@@ -147,7 +147,7 @@ CNewsPanel::CNewsPanel() {
    double screen_dpi = (double)TerminalInfoInteger(TERMINAL_SCREEN_DPI);
    dpi_scale_  = screen_dpi / 96;
       
-   wnd_x1_  = MAIN_PANEL_WIDTH;
+   wnd_x1_  = Scale(MAIN_PANEL_WIDTH);
    wnd_y1_  = -25; 
    wnd_x2_  = wnd_x1_ + NEWS_PANEL_WIDTH; 
    wnd_y2_  = wnd_y1_ + NEWS_PANEL_HEIGHT; 
@@ -221,11 +221,15 @@ bool        CNewsPanel::CreateNavigation() {
    const int bt_y1      = 310; 
    const int bt_y2      = bt_y1 + bt_height; 
    
-   if (!next_page_bt_.Create(0, "Next Page", 0, Col3(), bt_y1, Col3() + bt_width, bt_y2)) return false; 
+   const int nxt_pg_bt_x2_    = Scale(NEWS_PANEL_WIDTH + 40); 
+   const int nxt_pg_bt_x1_    = nxt_pg_bt_x2_ - Scale(bt_width);
+   
+   //if (!next_page_bt_.Create(0, "Next Page", 0, Scale(Col3()+50), Scale(bt_y1), Scale(Col3() + bt_width+50), Scale(bt_y2))) return false; 
+   if (!next_page_bt_.Create(0, "Next Page", 0 ,nxt_pg_bt_x1_, Scale(bt_y1), nxt_pg_bt_x2_, Scale(bt_y2))) return false; 
    if (!next_page_bt_.Text("Next Page")) return false; 
    if (!Add(next_page_bt_)) return false; 
    
-   if (!prev_page_bt_.Create(0, "Prev Page", 0, Col1(), bt_y1, Col1() + bt_width, bt_y2)) return false;
+   if (!prev_page_bt_.Create(0, "Prev Page", 0, Scale(Col1()), Scale(bt_y1), Scale(Col1() + bt_width), Scale(bt_y2))) return false;
    if (!prev_page_bt_.Text("Prev Page")) return false; 
    if (!Add(prev_page_bt_)) return false; 
    
@@ -235,7 +239,9 @@ bool        CNewsPanel::CreateNavigation() {
 }
 
 bool        CNewsPanel::CreatePageLabel(const int page) {
-   if (!page_num_label_.Create(0, "Page", 0, Col2() + 150, 315, Col3() - 20, 340)) return false; 
+   const int page_label_x1 = Scale(NEWS_PANEL_WIDTH / 2);
+   //if (!page_num_label_.Create(0, "Page", 0, Scale(Col2() + 150), Scale(315), Scale(Col3() - 20), Scale(340))) return false; 
+   if (!page_num_label_.Create(0, "Page", 0, page_label_x1, Scale(315), Scale(Col3() - 20), Scale(340))) return false; 
    if (!page_num_label_.Text((string)page)) return false; 
    if (!Add(page_num_label_)) return false; 
    return true; 
@@ -305,11 +311,12 @@ bool        CNewsPanel::ClearExistingLabels() {
 bool        CNewsPanel::CreateNewsLabel(CLabel &lbl,string name,string text,int x,int row) {
    int y_offset = (20 * (row - 1));
    
-   int y1      = 10 + y_offset;
-   int x2      = x + 50; 
-   int y2      = y1 + 20; 
+   int x1      = Scale(x); 
+   int y1      = Scale(10 + y_offset);
+   int x2      = x1 + Scale(50); 
+   int y2      = y1 + Scale(20); 
    
-   if (!lbl.Create(0, name, 0, x, y1, x2, y2)) return false;
+   if (!lbl.Create(0, name, 0, x1, y1, x2, y2)) return false;
    if (!lbl.Text(text)) return false; 
    if (!Add(lbl)) return false; 
    return true; 
@@ -317,25 +324,24 @@ bool        CNewsPanel::CreateNewsLabel(CLabel &lbl,string name,string text,int 
 
 
 bool        CNewsPanel::CreateLabel(CLabel &lbl, string name, int x, int row) {
+
    int y_offset   = (20 * (row-1)); 
 
-   int y1   = 10 + y_offset; 
-   int x2   = x + 50; 
-   int y2   = y1 + 20; 
+   int x1   = Scale(x); 
+   int y1   = Scale(10 + y_offset); 
+   int x2   = x1 + Scale(50); 
+   int y2   = y1 + Scale(20); 
    
    string label_name = name+"label"; 
    
-   if (!lbl.Create(0, label_name, 0, x, y1, x2, y2)) return false; 
+   if (!lbl.Create(0, label_name, 0, x1, y1, x2, y2)) return false; 
    if (!lbl.Text(name)) return false; 
    if (!Add(lbl)) return false;  
    return true; 
 }
 
 bool        CNewsPanel::CreateHeader() {
-   int x1   = Scale(MAIN_PANEL_WIDTH + 50);
-   int y1   = Scale(NEWS_PANEL_Y1 + 100); 
-   int x2   = Scale(x1 + 50);
-   int y2   = Scale(y1 +50);
+
    if (!CreateLabel(country_header_, "Country", Col1(), 1)) return false; 
    if (!CreateLabel(title_header_, "Title", Col2(), 1)) return false; 
    if (!CreateLabel(time_header_, "Time", Col3(), 1)) return false; 
